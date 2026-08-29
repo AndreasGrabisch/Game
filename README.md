@@ -25,7 +25,7 @@ npm run preview
 | # | Titel | Status |
 |---|-------|--------|
 | 1 | Runde Räder | ✅ Spielbar |
-| 2 | Pedale & Kette | 🔜 Geplant |
+| 2 | Pedale & Kette | ✅ Spielbar |
 | 3 | Lenker | 🔜 Geplant |
 
 ## Technik

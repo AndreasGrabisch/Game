@@ -124,13 +124,13 @@ export class WorkshopScene extends Phaser.Scene {
   }
 
   private startMission(missionId: string): void {
-    const mission = MISSIONS[missionId];
-    if (!mission) return;
+    if (!MISSIONS[missionId]) return;
 
     if (missionId === 'mission-01-wheels') {
       this.scene.start('Mission01Wheels');
+    } else if (missionId === 'mission-02-pedals') {
+      this.scene.start('Mission02Pedals');
     } else {
-      // Placeholder for future missions
       this.scene.start('WorkshopScene');
     }
   }

@@ -4,6 +4,7 @@ import { BootScene } from './scenes/BootScene';
 import { MenuScene } from './scenes/MenuScene';
 import { WorkshopScene } from './scenes/WorkshopScene';
 import { Mission01Wheels } from './scenes/missions/Mission01Wheels';
+import { Mission02Pedals } from './scenes/missions/Mission02Pedals';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -15,7 +16,7 @@ const config: Phaser.Types.Core.GameConfig = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, WorkshopScene, Mission01Wheels],
+  scene: [BootScene, MenuScene, WorkshopScene, Mission01Wheels, Mission02Pedals],
   input: {
     activePointers: 2,
   },

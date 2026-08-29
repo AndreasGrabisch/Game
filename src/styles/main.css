@@ -1,0 +1,101 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #87ceeb;
+  font-family: 'Fredoka', 'Comic Sans MS', cursive, sans-serif;
+  touch-action: none;
+  user-select: none;
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+}
+
+#game-container canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.ui-overlay.hidden {
+  display: none;
+}
+
+.ui-overlay.active {
+  pointer-events: auto;
+}
+
+.speech-bubble {
+  background: #fff;
+  border: 4px solid #1a1a2e;
+  border-radius: 24px;
+  padding: 20px 28px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 6px 6px 0 #1a1a2e;
+  animation: pop-in 0.3s ease-out;
+}
+
+.speech-bubble p {
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.comic-btn {
+  font-family: inherit;
+  font-size: clamp(18px, 3.5vw, 24px);
+  font-weight: 700;
+  color: #fff;
+  background: #ff6b35;
+  border: 3px solid #1a1a2e;
+  border-radius: 16px;
+  padding: 12px 32px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 #1a1a2e;
+  transition: transform 0.1s, box-shadow 0.1s;
+  min-height: 52px;
+  min-width: 140px;
+}
+
+.comic-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 #1a1a2e;
+}
+
+.comic-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #1a1a2e;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

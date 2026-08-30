@@ -8,7 +8,24 @@ Samuel sammelt technisches Wissen in kurzen Missionen (~5 Min.) und baut daraus 
 
 **https://andreasgrabisch.github.io/Game/**
 
-Auf Android: Link in Chrome öffnen → Menü → „Zum Startbildschirm hinzufügen“.
+### Einmalig aktivieren (falls die Seite 404 zeigt)
+
+1. GitHub → Repo **Game** → **Settings** → **Pages**
+2. **Build and deployment** → Source: **Deploy from a branch**
+3. Branch: **gh-pages** / **/ (root)** → **Save**
+4. Nach 1–2 Minuten ist die URL erreichbar
+
+Auf Android: Link in Chrome öffnen → Menü (⋮) → **Zum Startbildschirm hinzufügen**.
+
+### Neu deployen (nach Änderungen)
+
+```bash
+npm run deploy
+```
+
+Das baut das Spiel und pusht es auf den `gh-pages`-Branch.
+
+> **Hinweis:** Automatisches Deploy via GitHub Actions ist eingerichtet (`.github/workflows/deploy.yml`), läuft aber erst, wenn GitHub Actions in den Account-Einstellungen (**Billing & plans**) freigeschaltet ist.
 
 ## Lokal spielen
 

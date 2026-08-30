@@ -4,7 +4,13 @@ Ein kindgerechtes 2D-Browserspiel für Kinder ab ca. 6 Jahren.
 
 Samuel sammelt technisches Wissen in kurzen Missionen (~5 Min.) und baut daraus Schritt für Schritt sein Fahrrad.
 
-## Spielen
+## Online spielen
+
+**https://andreasgrabisch.github.io/Game/**
+
+Auf Android: Link in Chrome öffnen → Menü → „Zum Startbildschirm hinzufügen“.
+
+## Lokal spielen
 
 ```bash
 npm install

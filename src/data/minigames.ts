@@ -23,10 +23,10 @@ export const MINIGAMES: MinigameDefinition[] = [
   {
     id: 'detective',
     title: 'Detektivspiel',
-    tagline: 'Rätsel lösen und Hinweise finden',
+    tagline: 'Finde deine Sachen im Schrank',
     emoji: '🔍',
-    status: 'coming_soon',
-    sceneKey: 'DetectivePlaceholderScene',
+    status: 'available',
+    sceneKey: 'DetectiveCabinetScene',
     accentColor: 0x5b6ee1,
   },
 ];

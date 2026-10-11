@@ -2,7 +2,10 @@
 
 Eine kindgerechte 2D-Browserspiel-Sammlung für Kinder ab ca. 6 Jahren.
 
-Über die **Spiele-Auswahl** startest du einzelne Minispiele. Aktuell spielbar: **Samuel baut sein Fahrrad** (Missionen und Werkstatt). Ein **Detektivspiel** ist als Platzhalter vorbereitet.
+Über die **Spiele-Auswahl** startest du einzelne Minispiele:
+
+- **Samuel baut sein Fahrrad** — Missionen und Werkstatt
+- **Detektivspiel** — Detektiv-Sachen in einem 9-Schubladen-Schrank finden (falsche Schublade → alles mischt sich neu)
 
 ## Online spielen
 

@@ -89,10 +89,11 @@ export const detectiveSounds = {
   },
 
   shuffle(): void {
-    playNoise(0.28, 0.06);
-    playTone(320, 0.08, 'sawtooth', 0.03);
-    playTone(260, 0.1, 'sawtooth', 0.03, 0.09);
-    playTone(200, 0.12, 'sawtooth', 0.025, 0.18);
+    playNoise(0.55, 0.05);
+    playTone(320, 0.14, 'sawtooth', 0.028);
+    playTone(260, 0.16, 'sawtooth', 0.026, 0.16);
+    playTone(220, 0.18, 'sawtooth', 0.024, 0.34);
+    playTone(180, 0.2, 'triangle', 0.02, 0.52);
   },
 
   found(): void {

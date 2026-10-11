@@ -21,6 +21,8 @@ import {
   type SamuelMood,
 } from '../game/detectiveSamuel';
 import { detectiveSounds } from '../game/detectiveAudio';
+import { publicAssetUrl } from '../game/assetPath';
+import { tryEnableGameDisplay } from '../game/display';
 
 interface DrawerModel {
   uid: number;
@@ -63,7 +65,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image('detective-samuel', '/detective/samuel.jpg');
+    this.load.image('detective-samuel', publicAssetUrl('detective/samuel.jpg'));
   }
 
   create(): void {
@@ -122,6 +124,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       .setScale(0.92);
 
     const startBtn = createComicButton(this, x, y + 120 * scale, 'LOS!', async () => {
+      await tryEnableGameDisplay();
       await detectiveSounds.unlock();
       detectiveSounds.intro();
       this.tweens.add({
@@ -234,11 +237,79 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     void detectiveSounds.unlock();
     this.reactSamuel('peek');
     this.animateDrawerOpen(view, () => {
-      if (view.model.isDetective) {
-        this.handleDetectiveFind(view);
-      } else {
-        this.handleDecoy(view);
-      }
+      this.showItemReveal(view.model.itemId as DetectiveGearId | DecoyId, view.model.isDetective, () => {
+        if (view.model.isDetective) {
+          this.handleDetectiveFind(view);
+        } else {
+          this.handleDecoy(view);
+        }
+      });
+    });
+  }
+
+  private showItemReveal(
+    itemId: DetectiveGearId | DecoyId,
+    isDetective: boolean,
+    onContinue: () => void,
+  ): void {
+    const { x, y, scale } = getGameCenter(this);
+    const item = getItemById(itemId);
+    const overlay = this.add.container(0, 0).setDepth(45);
+
+    const dim = this.add.rectangle(x, y, this.scale.width, this.scale.height, 0x000000, 0.62);
+    const panel = drawScribbleRect(
+      this,
+      x,
+      y - 10 * scale,
+      500 * scale,
+      360 * scale,
+      COLORS.white,
+      DETECTIVE_MARKER_GREEN,
+      5,
+    );
+
+    const headline = this.add
+      .text(x, y - 135 * scale, isDetective ? 'DETEKTIV-SACHE!' : 'DAS WAR...', {
+        fontFamily: 'Fredoka, Comic Sans MS, cursive',
+        fontSize: `${30 * scale}px`,
+        color: '#1a1a2e',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+
+    const label = this.add
+      .text(x, y - 88 * scale, (item?.label ?? '').toUpperCase(), {
+        fontFamily: 'Fredoka, Comic Sans MS, cursive',
+        fontSize: `${24 * scale}px`,
+        color: isDetective ? '#3d7a54' : '#666688',
+        fontStyle: 'bold',
+        align: 'center',
+        wordWrap: { width: 420 * scale },
+      })
+      .setOrigin(0.5);
+
+    const itemWrap = this.add.container(x, y + 15 * scale);
+    itemWrap.add(drawCabinetItem(this, itemId, 1.45 * scale));
+    itemWrap.setScale(0.25);
+
+    const weiterBtn = createComicButton(
+      this,
+      x,
+      y + 130 * scale,
+      'WEITER',
+      () => {
+        overlay.destroy(true);
+        onContinue();
+      },
+      isDetective ? DETECTIVE_MARKER_GREEN : 0x888899,
+    );
+
+    overlay.add([dim, panel, headline, label, itemWrap, weiterBtn]);
+    this.tweens.add({
+      targets: itemWrap,
+      scale: 1,
+      duration: 420,
+      ease: 'Back.easeOut',
     });
   }
 
@@ -274,11 +345,9 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       this.showSamuelSpeech(`Hmm… nur ${item.label}!`);
     }
 
-    this.time.delayedCall(850, () => {
-      this.animateDrawerClose(view, () => {
-        this.playShuffleAnimation(() => {
-          this.inputLocked = false;
-        });
+    this.animateDrawerClose(view, () => {
+      this.playShuffleAnimation(() => {
+        this.inputLocked = false;
       });
     });
   }

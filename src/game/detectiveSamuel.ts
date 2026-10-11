@@ -30,6 +30,23 @@ export function drawScribbleRect(
   return g;
 }
 
+function drawSamuelSketch(scene: Phaser.Scene, y: number, scale: number): Phaser.GameObjects.Container {
+  const c = scene.add.container(0, y);
+  const s = scale;
+  const head = scene.add.circle(0, -34 * s, 22 * s, DETECTIVE_MARKER_GREEN, 0.15);
+  head.setStrokeStyle(3 * s, DETECTIVE_MARKER_GREEN);
+  const hair = scene.add.ellipse(0, -48 * s, 40 * s, 18 * s, DETECTIVE_MARKER_GREY, 0.35);
+  hair.setStrokeStyle(2 * s, DETECTIVE_MARKER_GREEN);
+  const body = scene.add.rectangle(0, 4 * s, 34 * s, 40 * s, DETECTIVE_MARKER_GREY, 0.35);
+  body.setStrokeStyle(3 * s, DETECTIVE_MARKER_GREEN);
+  const legL = scene.add.rectangle(-10 * s, 38 * s, 12 * s, 28 * s, DETECTIVE_MARKER_GREEN, 0.2);
+  legL.setStrokeStyle(2 * s, DETECTIVE_MARKER_GREEN);
+  const legR = scene.add.rectangle(10 * s, 38 * s, 12 * s, 28 * s, DETECTIVE_MARKER_GREEN, 0.2);
+  legR.setStrokeStyle(2 * s, DETECTIVE_MARKER_GREEN);
+  c.add([legL, legR, body, hair, head]);
+  return c;
+}
+
 export function createDetectiveSamuel(
   scene: Phaser.Scene,
   x: number,
@@ -52,9 +69,13 @@ export function createDetectiveSamuel(
     .setOrigin(0.5);
   root.add(nameTag);
 
-  const portrait = scene.add.image(0, 18 * scale, 'detective-samuel');
-  portrait.setDisplaySize(118 * scale, 132 * scale);
-  root.add(portrait);
+  if (scene.textures.exists('detective-samuel')) {
+    const portrait = scene.add.image(0, 18 * scale, 'detective-samuel');
+    portrait.setDisplaySize(118 * scale, 132 * scale);
+    root.add(portrait);
+  } else {
+    root.add(drawSamuelSketch(scene, 18 * scale, scale));
+  }
 
   const clipFrame = scene.add.rectangle(0, 18 * scale, 122 * scale, 136 * scale);
   clipFrame.setVisible(false);

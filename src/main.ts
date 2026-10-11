@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from './game/constants';
+import { bindFullscreenOnFirstTap } from './game/display';
+import { setupRotateHint } from './game/rotateHint';
 import { BootScene } from './scenes/BootScene';
 import { HubScene } from './scenes/HubScene';
 import { MenuScene } from './scenes/MenuScene';
@@ -17,6 +19,8 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT,
   },
   scene: [
     BootScene,
@@ -35,5 +39,8 @@ const config: Phaser.Types.Core.GameConfig = {
     pixelArt: false,
   },
 };
+
+bindFullscreenOnFirstTap();
+setupRotateHint();
 
 new Phaser.Game(config);

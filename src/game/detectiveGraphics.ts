@@ -1,34 +1,31 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import type { DetectiveGearId, DecoyId } from '../data/detectiveItems';
+import { DETECTIVE_MARKER_GREEN, DETECTIVE_MARKER_GREY, DETECTIVE_PAPER } from './detectiveSamuel';
 
-export function drawDrawerFront(
-  scene: Phaser.Scene,
-  width: number,
-  height: number,
-  open: boolean,
-): Phaser.GameObjects.Container {
-  const container = scene.add.container(0, 0);
-  const depth = open ? -8 : 0;
+export interface DrawerParts {
+  cavity: Phaser.GameObjects.Container;
+  front: Phaser.GameObjects.Container;
+  openOffsetY: number;
+}
 
-  const body = scene.add.rectangle(0, 0, width, height, 0x8b5a2b);
-  body.setStrokeStyle(3, COLORS.outline);
-  container.add(body);
+export function createDrawerParts(scene: Phaser.Scene, width: number, height: number): DrawerParts {
+  const cavity = scene.add.container(0, 0);
+  const inner = scene.add.rectangle(0, 0, width - 10, height - 10, DETECTIVE_PAPER);
+  inner.setStrokeStyle(3, DETECTIVE_MARKER_GREEN, 0.7);
+  cavity.add(inner);
 
-  const inner = scene.add.rectangle(0, depth, width - 12, height - 12, open ? 0xfff8e7 : 0x6d4423);
-  inner.setStrokeStyle(2, COLORS.outline, 0.5);
-  container.add(inner);
+  const front = scene.add.container(0, 0);
+  const body = scene.add.rectangle(0, 0, width, height, 0xe8dcc8);
+  body.setStrokeStyle(4, DETECTIVE_MARKER_GREEN);
+  const scribble = scene.add.rectangle(0, 0, width - 16, height - 18, DETECTIVE_MARKER_GREY, 0.18);
+  scribble.setStrokeStyle(2, DETECTIVE_MARKER_GREEN, 0.25);
+  const handle = scene.add.circle(0, height * 0.3, 9, DETECTIVE_MARKER_GREEN, 0.25);
+  handle.setStrokeStyle(3, DETECTIVE_MARKER_GREEN);
+  const groove = scene.add.rectangle(0, -height * 0.14, width - 22, 4, DETECTIVE_MARKER_GREEN, 0.2);
+  front.add([body, scribble, groove, handle]);
 
-  const handle = scene.add.circle(0, height * 0.32, 8, 0xffd93d);
-  handle.setStrokeStyle(2, COLORS.outline);
-  container.add(handle);
-
-  if (!open) {
-    const groove = scene.add.rectangle(0, -height * 0.15, width - 20, 4, 0x5c3d2e, 0.4);
-    container.add(groove);
-  }
-
-  return container;
+  return { cavity, front, openOffsetY: height * 0.42 };
 }
 
 export function drawCabinetItem(

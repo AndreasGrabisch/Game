@@ -460,35 +460,109 @@ export class DetectiveCabinetScene extends Phaser.Scene {
 
   private shuffleMovableDrawers(onDone: () => void): void {
     const movable = this.drawers.filter((d) => !d.lockedOpen);
-    const slots = shuffleArray(movable.map((d) => d.slot));
-    movable.forEach((drawer, i) => {
-      drawer.slot = slots[i];
+    const visualSlot = new Map<number, number>();
+    const targetSlot = new Map<number, number>();
+    const shuffledSlots = shuffleArray(movable.map((d) => d.slot));
+
+    movable.forEach((drawer, index) => {
+      visualSlot.set(drawer.uid, drawer.slot);
+      targetSlot.set(drawer.uid, shuffledSlots[index]);
     });
 
-    const moveOne = (index: number): void => {
-      if (index >= movable.length) {
-        onDone();
-        return;
-      }
+    const lifted = new Set<number>();
 
-      const drawer = movable[index];
-      const view = this.drawerViews.find((v) => v.model.uid === drawer.uid)!;
-      const target = this.slotToWorld(drawer.slot);
+    const getOccupant = (slot: number, excludeUid: number): DrawerModel | undefined =>
+      movable.find(
+        (d) => d.uid !== excludeUid && !lifted.has(d.uid) && visualSlot.get(d.uid) === slot,
+      );
 
+    const viewFor = (uid: number): DrawerView =>
+      this.drawerViews.find((v) => v.model.uid === uid)!;
+
+    const tweenDrawerToSlot = (uid: number, slot: number, onComplete: () => void): void => {
+      const view = viewFor(uid);
+      const pos = this.slotToWorld(slot);
+      lifted.delete(uid);
       this.tweens.add({
         targets: view.root,
-        x: target.x,
-        y: target.y,
+        x: pos.x,
+        y: pos.y,
+        scale: 1,
         duration: DETECTIVE_TIMING.shuffleMoveEachMs,
         ease: 'Sine.easeInOut',
         onComplete: () => {
           view.root.setAngle(0);
-          moveOne(index + 1);
+          visualSlot.set(uid, slot);
+          onComplete();
         },
       });
     };
 
-    moveOne(0);
+    const liftDrawerAside = (uid: number, onComplete: () => void): void => {
+      const view = viewFor(uid);
+      lifted.add(uid);
+      this.tweens.add({
+        targets: view.root,
+        y: view.root.y - DETECTIVE_TIMING.shuffleLiftPx * this.layoutScale,
+        scale: 0.86,
+        duration: DETECTIVE_TIMING.shuffleVacateLeadMs,
+        ease: 'Sine.easeOut',
+        onComplete,
+      });
+    };
+
+    const moveDrawerToTarget = (
+      uid: number,
+      onComplete: () => void,
+      stack: Set<number> = new Set(),
+    ): void => {
+      const destination = targetSlot.get(uid)!;
+      const current = visualSlot.get(uid)!;
+      if (current === destination && !lifted.has(uid)) {
+        onComplete();
+        return;
+      }
+
+      const occupant = getOccupant(destination, uid);
+      const landDrawer = (): void => {
+        this.time.delayedCall(DETECTIVE_TIMING.shuffleVacateLeadMs * 0.25, () => {
+          tweenDrawerToSlot(uid, destination, onComplete);
+        });
+      };
+
+      if (!occupant) {
+        if (lifted.has(uid)) {
+          tweenDrawerToSlot(uid, destination, onComplete);
+        } else {
+          landDrawer();
+        }
+        return;
+      }
+
+      if (stack.has(occupant.uid)) {
+        liftDrawerAside(occupant.uid, landDrawer);
+        return;
+      }
+
+      stack.add(uid);
+      moveDrawerToTarget(occupant.uid, () => {
+        stack.delete(uid);
+        landDrawer();
+      }, stack);
+    };
+
+    const finalizeMove = (index: number): void => {
+      if (index >= movable.length) {
+        movable.forEach((drawer) => {
+          drawer.slot = targetSlot.get(drawer.uid)!;
+        });
+        onDone();
+        return;
+      }
+      moveDrawerToTarget(movable[index].uid, () => finalizeMove(index + 1));
+    };
+
+    finalizeMove(0);
   }
 
   private showSamuelSpeech(text: string): void {

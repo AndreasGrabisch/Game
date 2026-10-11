@@ -15,7 +15,8 @@ Eine kindgerechte 2D-Browserspiel-Sammlung für Kinder ab ca. 6 Jahren.
 
 1. GitHub → Repo **Game** → **Settings** → **Pages**
 2. **Build and deployment** → Source: **Deploy from a branch**
-3. Branch: **gh-pages** / **/ (root)** → **Save**
+3. Branch: **gh-pages** / **/ (root)** → **Save**  
+   (Nicht „GitHub Actions“ als Source, wenn der Deploy den Branch `gh-pages` befüllt.)
 4. Nach 1–2 Minuten ist die URL erreichbar
 
 Auf Android: Link in Chrome öffnen → Menü (⋮) → **Zum Startbildschirm hinzufügen**.

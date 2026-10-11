@@ -101,7 +101,7 @@ export function animateSamuel(
       scene.tweens.add({
         targets: samuel,
         y: samuel.y - 5 * scale,
-        duration: 1400,
+        duration: 2200,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
@@ -112,7 +112,7 @@ export function animateSamuel(
         targets: samuel,
         x: samuel.x + 22 * scale,
         angle: 4,
-        duration: 220,
+        duration: 380,
         yoyo: true,
         ease: 'Quad.easeOut',
         onComplete: () => animateSamuel(scene, samuel, 'idle', scale),
@@ -123,7 +123,7 @@ export function animateSamuel(
         targets: samuel,
         y: samuel.y - 18 * scale,
         scale: 1.06,
-        duration: 180,
+        duration: 320,
         yoyo: true,
         ease: 'Back.easeOut',
         onComplete: () => animateSamuel(scene, samuel, 'idle', scale),
@@ -133,9 +133,9 @@ export function animateSamuel(
       scene.tweens.add({
         targets: samuel,
         angle: -6,
-        duration: 90,
+        duration: 160,
         yoyo: true,
-        repeat: 2,
+        repeat: 3,
         onComplete: () => {
           samuel.setAngle(0);
           animateSamuel(scene, samuel, 'idle', scale);

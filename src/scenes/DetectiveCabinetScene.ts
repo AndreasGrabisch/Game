@@ -23,6 +23,7 @@ import {
 import { detectiveSounds } from '../game/detectiveAudio';
 import { publicAssetUrl } from '../game/assetPath';
 import { tryEnableGameDisplay } from '../game/display';
+import { DETECTIVE_TIMING } from '../game/detectiveTiming';
 
 interface DrawerModel {
   uid: number;
@@ -130,7 +131,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       this.tweens.add({
         targets: [overlay, introSamuel, introLine],
         alpha: 0,
-        duration: 280,
+        duration: DETECTIVE_TIMING.introFadeOut,
         onComplete: () => {
           overlay.destroy(true);
           introSamuel.destroy(true);
@@ -142,12 +143,12 @@ export class DetectiveCabinetScene extends Phaser.Scene {
 
     overlay.add([veil, panel, introLine, startBtn]);
     overlay.setAlpha(0);
-    this.tweens.add({ targets: overlay, alpha: 1, duration: 350 });
+    this.tweens.add({ targets: overlay, alpha: 1, duration: DETECTIVE_TIMING.introFadeIn });
     this.tweens.add({
       targets: introLine,
       alpha: 1,
       scale: 1,
-      duration: 500,
+      duration: DETECTIVE_TIMING.introTextIn,
       ease: 'Back.easeOut',
     });
   }
@@ -308,7 +309,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.tweens.add({
       targets: itemWrap,
       scale: 1,
-      duration: 420,
+      duration: DETECTIVE_TIMING.itemRevealPop,
       ease: 'Back.easeOut',
     });
   }
@@ -325,7 +326,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.tweens.add({
       targets: view.itemHolder,
       scale: 1.2,
-      duration: 180,
+      duration: DETECTIVE_TIMING.findPulse,
       yoyo: true,
       ease: 'Back.easeOut',
       onComplete: () => {
@@ -363,7 +364,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.tweens.add({
       targets: view.front,
       y: view.openOffsetY,
-      duration: 300,
+      duration: DETECTIVE_TIMING.drawerOpenFront,
       ease: 'Cubic.easeOut',
     });
 
@@ -371,8 +372,8 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       targets: view.itemHolder,
       alpha: 1,
       scale: 1,
-      duration: 320,
-      delay: 120,
+      duration: DETECTIVE_TIMING.drawerOpenItem,
+      delay: DETECTIVE_TIMING.drawerOpenItemDelay,
       ease: 'Back.easeOut',
       onComplete,
     });
@@ -384,15 +385,15 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       targets: view.itemHolder,
       alpha: 0,
       scale: 0.2,
-      duration: 200,
+      duration: DETECTIVE_TIMING.drawerCloseItem,
       ease: 'Quad.easeIn',
     });
 
     this.tweens.add({
       targets: view.front,
       y: 0,
-      duration: 280,
-      delay: 60,
+      duration: DETECTIVE_TIMING.drawerCloseFront,
+      delay: DETECTIVE_TIMING.drawerCloseFrontDelay,
       ease: 'Cubic.easeIn',
       onComplete: () => {
         view.isOpen = false;
@@ -433,7 +434,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.tweens.add({
       targets: swirl,
       alpha: 0,
-      duration: 500,
+      duration: DETECTIVE_TIMING.shuffleSwirlFade,
       onComplete: () => swirl.destroy(),
     });
 
@@ -441,12 +442,12 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     movableViews.forEach((view) => {
       this.tweens.add({
         targets: view.root,
-        angle: Phaser.Math.Between(-8, 8),
-        scaleX: 0.92,
-        scaleY: 1.06,
-        duration: 90,
+        angle: Phaser.Math.Between(-6, 6),
+        scaleX: 0.94,
+        scaleY: 1.04,
+        duration: DETECTIVE_TIMING.shuffleWiggleMs,
         yoyo: true,
-        repeat: 2,
+        repeat: DETECTIVE_TIMING.shuffleWiggleRepeats,
         onComplete: () => {
           view.root.setAngle(0);
           view.root.setScale(1);
@@ -464,25 +465,30 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       drawer.slot = slots[i];
     });
 
-    let pending = movable.length;
-    movable.forEach((drawer, index) => {
+    const moveOne = (index: number): void => {
+      if (index >= movable.length) {
+        onDone();
+        return;
+      }
+
+      const drawer = movable[index];
       const view = this.drawerViews.find((v) => v.model.uid === drawer.uid)!;
       const target = this.slotToWorld(drawer.slot);
+
       this.tweens.add({
         targets: view.root,
         x: target.x,
         y: target.y,
-        angle: Phaser.Math.Between(-12, 12),
-        duration: 520,
-        delay: index * 45,
-        ease: 'Back.easeInOut',
+        duration: DETECTIVE_TIMING.shuffleMoveEachMs,
+        ease: 'Sine.easeInOut',
         onComplete: () => {
           view.root.setAngle(0);
-          pending -= 1;
-          if (pending === 0) onDone();
+          moveOne(index + 1);
         },
       });
-    });
+    };
+
+    moveOne(0);
   }
 
   private showSamuelSpeech(text: string): void {
@@ -499,7 +505,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       })
       .setOrigin(0, 0.5)
       .setDepth(25);
-    this.time.delayedCall(1200, () => {
+    this.time.delayedCall(DETECTIVE_TIMING.speechVisibleMs, () => {
       this.hintText?.destroy();
       this.hintText = undefined;
     });
@@ -556,7 +562,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
         this.tweens.add({
           targets: icon,
           scale: 1.15,
-          duration: 160,
+          duration: DETECTIVE_TIMING.backpackPop,
           yoyo: true,
           ease: 'Back.easeOut',
         });

@@ -45,6 +45,15 @@ export class MenuScene extends Phaser.Scene {
       },
       0x5b6ee1,
     );
+
+    createComicButton(
+      this,
+      x,
+      y + 310 * scale,
+      'Alle Spiele',
+      () => this.scene.start('HubScene'),
+      0x888899,
+    );
   }
 
   private drawBackground(): void {

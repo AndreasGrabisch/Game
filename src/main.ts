@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT } from './game/constants';
 import { BootScene } from './scenes/BootScene';
+import { HubScene } from './scenes/HubScene';
 import { MenuScene } from './scenes/MenuScene';
 import { WorkshopScene } from './scenes/WorkshopScene';
+import { DetectiveCabinetScene } from './scenes/DetectiveCabinetScene';
 import { Mission01Wheels } from './scenes/missions/Mission01Wheels';
 import { Mission02Pedals } from './scenes/missions/Mission02Pedals';
 
@@ -16,7 +18,15 @@ const config: Phaser.Types.Core.GameConfig = {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
-  scene: [BootScene, MenuScene, WorkshopScene, Mission01Wheels, Mission02Pedals],
+  scene: [
+    BootScene,
+    HubScene,
+    MenuScene,
+    WorkshopScene,
+    DetectiveCabinetScene,
+    Mission01Wheels,
+    Mission02Pedals,
+  ],
   input: {
     activePointers: 2,
   },

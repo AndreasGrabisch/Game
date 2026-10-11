@@ -66,7 +66,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image('detective-samuel', publicAssetUrl('detective/samuel.jpg'));
+    this.load.image('detective-samuel', publicAssetUrl('detective/samuel.png'));
   }
 
   create(): void {

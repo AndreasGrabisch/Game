@@ -71,7 +71,7 @@ export function createDetectiveSamuel(
 
   if (scene.textures.exists('detective-samuel')) {
     const portrait = scene.add.image(0, 18 * scale, 'detective-samuel');
-    portrait.setDisplaySize(118 * scale, 132 * scale);
+    portrait.setDisplaySize(112 * scale, 162 * scale);
     root.add(portrait);
   } else {
     root.add(drawSamuelSketch(scene, 18 * scale, scale));

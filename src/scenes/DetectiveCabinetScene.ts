@@ -20,6 +20,7 @@ import {
   drawScribbleRect,
   type SamuelMood,
 } from '../game/detectiveSamuel';
+import { detectiveSounds } from '../game/detectiveAudio';
 
 interface DrawerModel {
   uid: number;
@@ -94,6 +95,58 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.createDrawerViews();
     this.createBackpackPanel(x + 300 * scale, y - 20 * scale, scale);
     this.createFooterButtons(x, y + 220 * scale, scale);
+
+    this.inputLocked = true;
+    this.showIntro(x, y, scale);
+  }
+
+  private showIntro(x: number, y: number, scale: number): void {
+    const overlay = this.add.container(0, 0).setDepth(60);
+    const veil = this.add.rectangle(x, y, this.scale.width, this.scale.height, DETECTIVE_PAPER, 0.96);
+    const panel = drawScribbleRect(this, x, y - 10 * scale, 620 * scale, 360 * scale, COLORS.white, DETECTIVE_MARKER_GREEN, 5);
+
+    const introSamuel = createDetectiveSamuel(this, x - 200 * scale, y - 30 * scale, scale * 1.15);
+    introSamuel.setDepth(61);
+
+    const introLine = this.add
+      .text(x + 70 * scale, y - 70 * scale, 'ICH SUCHE MEINE\nDETEKTIV SACHEN', {
+        fontFamily: 'Fredoka, Comic Sans MS, cursive',
+        fontSize: `${34 * scale}px`,
+        color: '#1a1a2e',
+        fontStyle: 'bold',
+        align: 'center',
+        lineSpacing: 8 * scale,
+      })
+      .setOrigin(0.5)
+      .setAlpha(0)
+      .setScale(0.92);
+
+    const startBtn = createComicButton(this, x, y + 120 * scale, 'LOS!', async () => {
+      await detectiveSounds.unlock();
+      detectiveSounds.intro();
+      this.tweens.add({
+        targets: [overlay, introSamuel, introLine],
+        alpha: 0,
+        duration: 280,
+        onComplete: () => {
+          overlay.destroy(true);
+          introSamuel.destroy(true);
+          introLine.destroy();
+          this.inputLocked = false;
+        },
+      });
+    }, DETECTIVE_MARKER_GREEN);
+
+    overlay.add([veil, panel, introLine, startBtn]);
+    overlay.setAlpha(0);
+    this.tweens.add({ targets: overlay, alpha: 1, duration: 350 });
+    this.tweens.add({
+      targets: introLine,
+      alpha: 1,
+      scale: 1,
+      duration: 500,
+      ease: 'Back.easeOut',
+    });
   }
 
   private reactSamuel(mood: SamuelMood): void {
@@ -178,6 +231,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     if (!view || view.model.lockedOpen || view.isOpen) return;
 
     this.inputLocked = true;
+    void detectiveSounds.unlock();
     this.reactSamuel('peek');
     this.animateDrawerOpen(view, () => {
       if (view.model.isDetective) {
@@ -195,6 +249,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.refreshBackpack();
     this.reactSamuel('happy');
     this.showSamuelSpeech('Super Fund!');
+    detectiveSounds.found();
 
     this.tweens.add({
       targets: view.itemHolder,
@@ -214,6 +269,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   private handleDecoy(view: DrawerView): void {
     const item = getItemById(view.model.itemId);
     this.reactSamuel('oops');
+    detectiveSounds.decoy();
     if (item) {
       this.showSamuelSpeech(`Hmm… nur ${item.label}!`);
     }
@@ -228,6 +284,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private animateDrawerOpen(view: DrawerView, onComplete: () => void): void {
+    detectiveSounds.drawerOpen();
     view.isOpen = true;
     view.itemHolder.setVisible(true);
     view.itemHolder.setAlpha(0);
@@ -253,6 +310,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private animateDrawerClose(view: DrawerView, onComplete: () => void): void {
+    detectiveSounds.drawerClose();
     this.tweens.add({
       targets: view.itemHolder,
       alpha: 0,
@@ -291,6 +349,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     }
 
     const movableViews = movable.map((d) => this.drawerViews.find((v) => v.model.uid === d.uid)!);
+    detectiveSounds.shuffle();
     const swirl = this.add.graphics().setDepth(15);
     swirl.lineStyle(3, DETECTIVE_MARKER_GREEN, 0.35);
     for (let i = 0; i < 6; i++) {
@@ -452,6 +511,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
 
   private showWin(): void {
     this.inputLocked = true;
+    detectiveSounds.win();
     this.reactSamuel('happy');
     const { x, y, scale } = getGameCenter(this);
     const overlay = this.add.container(0, 0).setDepth(50);

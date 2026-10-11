@@ -507,46 +507,54 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       });
     };
 
-    const launchMoveWithLateVacate = (uid: number, onComplete: () => void): void => {
+    const flyDuration = DETECTIVE_TIMING.shuffleMoveEachMs;
+    const vacateLead = DETECTIVE_TIMING.shuffleVacateLeadMs;
+    const chainStepMs = flyDuration - vacateLead;
+    const flightsStarted = new Set<number>();
+
+    const startFlight = (uid: number, slot: number, duration: number): void => {
+      if (flightsStarted.has(uid)) return;
+      flightsStarted.add(uid);
+      tweenDrawerToSlot(uid, slot, duration, () => {
+        /* visualSlot wird im Tween gesetzt */
+      });
+    };
+
+    const launchChainedFlight = (uid: number): void => {
       const destination = targetSlot.get(uid)!;
-      const current = visualSlot.get(uid)!;
-      if (current === destination) {
-        onComplete();
+      const current = visualSlot.get(uid);
+      if (current === destination && !inFlight.has(uid)) {
+        flightsStarted.add(uid);
         return;
       }
 
-      const flyDuration = DETECTIVE_TIMING.shuffleMoveEachMs;
-      const vacateLead = DETECTIVE_TIMING.shuffleVacateLeadMs;
       const occupant = getOccupant(destination, uid);
-
-      tweenDrawerToSlot(uid, destination, flyDuration, onComplete);
+      startFlight(uid, destination, flyDuration);
 
       if (!occupant) return;
 
       const occUid = occupant.uid;
       const occDestination = targetSlot.get(occUid)!;
-      const vacateStartDelay = Math.max(0, flyDuration - vacateLead);
-
-      this.time.delayedCall(vacateStartDelay, () => {
+      this.time.delayedCall(Math.max(0, flyDuration - vacateLead), () => {
         visualSlot.delete(occUid);
-        tweenDrawerToSlot(occUid, occDestination, vacateLead, () => {
-          /* Slot wurde im Tween-Complete gesetzt */
-        });
+        startFlight(occUid, occDestination, vacateLead);
       });
     };
 
-    const finalizeMove = (index: number): void => {
-      if (index >= movable.length) {
-        movable.forEach((drawer) => {
-          drawer.slot = targetSlot.get(drawer.uid)!;
-        });
-        onDone();
-        return;
-      }
-      launchMoveWithLateVacate(movable[index].uid, () => finalizeMove(index + 1));
-    };
+    const flightOrder = [...movable].sort((a, b) => a.uid - b.uid);
+    flightOrder.forEach((drawer, index) => {
+      this.time.delayedCall(index * chainStepMs, () => {
+        launchChainedFlight(drawer.uid);
+      });
+    });
 
-    finalizeMove(0);
+    const totalMs = (flightOrder.length - 1) * chainStepMs + flyDuration;
+    this.time.delayedCall(totalMs, () => {
+      movable.forEach((drawer) => {
+        drawer.slot = targetSlot.get(drawer.uid)!;
+      });
+      onDone();
+    });
   }
 
   private showSamuelSpeech(text: string): void {

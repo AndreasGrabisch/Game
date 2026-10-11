@@ -22,7 +22,6 @@ export const DETECTIVE_TIMING = {
   shuffleWiggleRepeats: 4,
   /** Eine Schublade nach der anderen – leichter zu verfolgen. */
   shuffleMoveEachMs: 2200,
-  /** Abstand, wenn eine Schublade kurz ausweicht, damit keine zwei übereinander liegen. */
-  shuffleVacateLeadMs: 480,
-  shuffleLiftPx: 56,
+  /** Wie kurz vor dem Landen die blockierende Schublade losfliegt. */
+  shuffleVacateLeadMs: 520,
 } as const;

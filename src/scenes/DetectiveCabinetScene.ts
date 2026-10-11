@@ -469,86 +469,70 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       targetSlot.set(drawer.uid, shuffledSlots[index]);
     });
 
-    const lifted = new Set<number>();
+    const inFlight = new Set<number>();
 
     const getOccupant = (slot: number, excludeUid: number): DrawerModel | undefined =>
       movable.find(
-        (d) => d.uid !== excludeUid && !lifted.has(d.uid) && visualSlot.get(d.uid) === slot,
+        (d) =>
+          d.uid !== excludeUid &&
+          !inFlight.has(d.uid) &&
+          visualSlot.get(d.uid) === slot,
       );
 
     const viewFor = (uid: number): DrawerView =>
       this.drawerViews.find((v) => v.model.uid === uid)!;
 
-    const tweenDrawerToSlot = (uid: number, slot: number, onComplete: () => void): void => {
+    const tweenDrawerToSlot = (
+      uid: number,
+      slot: number,
+      duration: number,
+      onComplete: () => void,
+    ): void => {
       const view = viewFor(uid);
       const pos = this.slotToWorld(slot);
-      lifted.delete(uid);
+      inFlight.add(uid);
       this.tweens.add({
         targets: view.root,
         x: pos.x,
         y: pos.y,
         scale: 1,
-        duration: DETECTIVE_TIMING.shuffleMoveEachMs,
+        duration,
         ease: 'Sine.easeInOut',
         onComplete: () => {
           view.root.setAngle(0);
+          inFlight.delete(uid);
           visualSlot.set(uid, slot);
           onComplete();
         },
       });
     };
 
-    const liftDrawerAside = (uid: number, onComplete: () => void): void => {
-      const view = viewFor(uid);
-      lifted.add(uid);
-      this.tweens.add({
-        targets: view.root,
-        y: view.root.y - DETECTIVE_TIMING.shuffleLiftPx * this.layoutScale,
-        scale: 0.86,
-        duration: DETECTIVE_TIMING.shuffleVacateLeadMs,
-        ease: 'Sine.easeOut',
-        onComplete,
-      });
-    };
-
-    const moveDrawerToTarget = (
-      uid: number,
-      onComplete: () => void,
-      stack: Set<number> = new Set(),
-    ): void => {
+    const launchMoveWithLateVacate = (uid: number, onComplete: () => void): void => {
       const destination = targetSlot.get(uid)!;
       const current = visualSlot.get(uid)!;
-      if (current === destination && !lifted.has(uid)) {
+      if (current === destination) {
         onComplete();
         return;
       }
 
+      const flyDuration = DETECTIVE_TIMING.shuffleMoveEachMs;
+      const vacateLead = DETECTIVE_TIMING.shuffleVacateLeadMs;
       const occupant = getOccupant(destination, uid);
-      const landDrawer = (): void => {
-        this.time.delayedCall(DETECTIVE_TIMING.shuffleVacateLeadMs * 0.25, () => {
-          tweenDrawerToSlot(uid, destination, onComplete);
+
+      tweenDrawerToSlot(uid, destination, flyDuration, onComplete);
+
+      if (!occupant) return;
+
+      const occUid = occupant.uid;
+      const occDestination = targetSlot.get(occUid)!;
+      const vacateStartDelay = Math.max(0, flyDuration - vacateLead);
+
+      this.time.delayedCall(vacateStartDelay, () => {
+        visualSlot.delete(occUid);
+        tweenDrawerToSlot(occUid, occDestination, vacateLead, () => {
+          /* Slot wurde im Tween-Complete gesetzt */
         });
-      };
-
-      if (!occupant) {
-        if (lifted.has(uid)) {
-          tweenDrawerToSlot(uid, destination, onComplete);
-        } else {
-          landDrawer();
-        }
-        return;
-      }
-
-      if (stack.has(occupant.uid)) {
-        liftDrawerAside(occupant.uid, landDrawer);
-        return;
-      }
-
-      stack.add(uid);
-      moveDrawerToTarget(occupant.uid, () => {
-        stack.delete(uid);
-        landDrawer();
-      }, stack);
+      });
     };
 
     const finalizeMove = (index: number): void => {
@@ -559,7 +543,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
         onDone();
         return;
       }
-      moveDrawerToTarget(movable[index].uid, () => finalizeMove(index + 1));
+      launchMoveWithLateVacate(movable[index].uid, () => finalizeMove(index + 1));
     };
 
     finalizeMove(0);

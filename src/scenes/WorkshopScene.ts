@@ -63,7 +63,7 @@ export class WorkshopScene extends Phaser.Scene {
       this,
       x - 200 * scale,
       y + 220 * scale,
-      'Menü',
+      'Titel',
       () => this.scene.start('MenuScene'),
       0x5b6ee1,
     );

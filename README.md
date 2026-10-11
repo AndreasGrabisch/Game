@@ -1,8 +1,8 @@
-# Samuel baut sein Fahrrad
+# Minispiele
 
-Ein kindgerechtes 2D-Browserspiel für Kinder ab ca. 6 Jahren.
+Eine kindgerechte 2D-Browserspiel-Sammlung für Kinder ab ca. 6 Jahren.
 
-Samuel sammelt technisches Wissen in kurzen Missionen (~5 Min.) und baut daraus Schritt für Schritt sein Fahrrad.
+Über die **Spiele-Auswahl** startest du einzelne Minispiele. Aktuell spielbar: **Samuel baut sein Fahrrad** (Missionen und Werkstatt). Ein **Detektivspiel** ist als Platzhalter vorbereitet.
 
 ## Online spielen
 

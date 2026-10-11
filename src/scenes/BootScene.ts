@@ -12,7 +12,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     this.scale.on('resize', this.resize, this);
-    this.scene.start('MenuScene');
+    this.scene.start('HubScene');
   }
 
   private resize(gameSize: Phaser.Structs.Size): void {

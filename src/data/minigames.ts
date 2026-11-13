@@ -14,7 +14,7 @@ export const MINIGAMES: MinigameDefinition[] = [
   {
     id: 'bike',
     title: 'Samuel baut sein Fahrrad',
-    tagline: 'Missionen spielen und das Rad zusammenbauen',
+    tagline: 'Bau das Fahrrad in der Werkstatt',
     emoji: '🚲',
     status: 'available',
     sceneKey: 'MenuScene',
@@ -28,6 +28,15 @@ export const MINIGAMES: MinigameDefinition[] = [
     status: 'available',
     sceneKey: 'DetectiveCabinetScene',
     accentColor: 0x5b6ee1,
+  },
+  {
+    id: 'colors',
+    title: 'Farben sortieren',
+    tagline: 'Jede Sache in den richtigen Eimer',
+    emoji: '🎨',
+    status: 'available',
+    sceneKey: 'ColorSortScene',
+    accentColor: 0x6bcb77,
   },
 ];
 

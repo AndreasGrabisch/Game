@@ -9,6 +9,9 @@ import { WorkshopScene } from './scenes/WorkshopScene';
 import { DetectiveCabinetScene } from './scenes/DetectiveCabinetScene';
 import { Mission01Wheels } from './scenes/missions/Mission01Wheels';
 import { Mission02Pedals } from './scenes/missions/Mission02Pedals';
+import { Mission03Handlebar } from './scenes/missions/Mission03Handlebar';
+import { RideScene } from './scenes/RideScene';
+import { ColorSortScene } from './scenes/ColorSortScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -30,6 +33,9 @@ const config: Phaser.Types.Core.GameConfig = {
     DetectiveCabinetScene,
     Mission01Wheels,
     Mission02Pedals,
+    Mission03Handlebar,
+    RideScene,
+    ColorSortScene,
   ],
   input: {
     activePointers: 2,

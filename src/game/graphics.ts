@@ -211,6 +211,35 @@ export function addComicText(
     .setOrigin(0.5);
 }
 
+export function floatFeedback(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  message: string,
+  color = '#ff6b6b',
+  size = 18,
+): void {
+  const feedback = scene.add
+    .text(x, y, message, {
+      fontFamily: 'Fredoka, Comic Sans MS, cursive',
+      fontSize: `${size}px`,
+      color,
+      fontStyle: 'bold',
+      backgroundColor: '#ffffff',
+      padding: { x: 8, y: 4 },
+    })
+    .setOrigin(0.5)
+    .setDepth(40);
+
+  scene.tweens.add({
+    targets: feedback,
+    y: y - 36,
+    alpha: 0,
+    duration: 900,
+    onComplete: () => feedback.destroy(),
+  });
+}
+
 export function createComicButton(
   scene: Phaser.Scene,
   x: number,
@@ -218,9 +247,10 @@ export function createComicButton(
   label: string,
   onClick: () => void,
   color = 0xff6b35,
+  width = 200,
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y);
-  const bg = scene.add.rectangle(0, 0, 200, 56, color);
+  const bg = scene.add.rectangle(0, 0, width, 56, color);
   bg.setStrokeStyle(3, COLORS.outline);
   bg.setInteractive({ useHandCursor: true });
 

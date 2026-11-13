@@ -16,15 +16,15 @@ export class HubScene extends Phaser.Scene {
     addComicText(this, x, y - 220 * scale, 'Minispiele', 44 * scale);
     addComicText(this, x, y - 175 * scale, 'Wähle ein Spiel aus', 20 * scale);
 
-    const cardGap = 24 * scale;
-    const cardWidth = 280 * scale;
-    const cardHeight = 200 * scale;
+    const cardGap = 18 * scale;
+    const cardWidth = Math.min(250 * scale, (860 * scale - (MINIGAMES.length - 1) * cardGap) / MINIGAMES.length);
+    const cardHeight = 270 * scale;
     const totalWidth = MINIGAMES.length * cardWidth + (MINIGAMES.length - 1) * cardGap;
     const startX = x - totalWidth / 2 + cardWidth / 2;
 
     MINIGAMES.forEach((game, index) => {
       const cx = startX + index * (cardWidth + cardGap);
-      const cy = y + 20 * scale;
+      const cy = y + 16 * scale;
       this.createMinigameCard(cx, cy, cardWidth, cardHeight, scale, game);
     });
   }
@@ -54,9 +54,9 @@ export class HubScene extends Phaser.Scene {
     container.add(emoji);
 
     const title = this.add
-      .text(0, -height / 2 + 88 * scale, game.title, {
+      .text(0, -height / 2 + 76 * scale, game.title, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${20 * scale}px`,
+        fontSize: `${18 * scale}px`,
         color: '#1a1a2e',
         fontStyle: 'bold',
         align: 'center',
@@ -66,7 +66,7 @@ export class HubScene extends Phaser.Scene {
     container.add(title);
 
     const tagline = this.add
-      .text(0, height / 2 - 72 * scale, game.tagline, {
+      .text(0, height / 2 - 128 * scale, game.tagline, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
         fontSize: `${14 * scale}px`,
         color: '#444466',
@@ -91,7 +91,7 @@ export class HubScene extends Phaser.Scene {
     }
 
     const btnLabel = isSoon ? 'Vorschau' : 'Spielen';
-    const btn = createComicButton(this, 0, height / 2 - 28 * scale, btnLabel, () => {
+    const btn = createComicButton(this, 0, height / 2 - 36 * scale, btnLabel, () => {
       this.scene.start(game.sceneKey);
     }, game.accentColor);
     container.add(btn);
@@ -117,7 +117,7 @@ export class HubScene extends Phaser.Scene {
       cloud.setStrokeStyle(2, COLORS.outline, 0.15);
     }
 
-    const shelf = this.add.rectangle(width / 2, height * 0.72, width * 0.92, 12, 0x8b6914);
+    const shelf = this.add.rectangle(width / 2, height * 0.9, width * 0.92, 12, 0x8b6914);
     shelf.setStrokeStyle(2, COLORS.outline);
   }
 }

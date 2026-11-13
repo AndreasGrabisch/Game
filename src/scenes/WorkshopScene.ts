@@ -43,7 +43,10 @@ export class WorkshopScene extends Phaser.Scene {
 
     drawSamuel(this, x - 200 * scale, y + 60 * scale, 1.0 * scale);
 
-    if (isPartUnlocked('wheels') && isPartUnlocked('pedals') && isPartUnlocked('handlebar')) {
+    const bikeReady =
+      isPartUnlocked('wheels') && isPartUnlocked('pedals') && isPartUnlocked('handlebar');
+
+    if (bikeReady) {
       this.tweens.add({
         targets: bike,
         x: x + 30 * scale,
@@ -52,7 +55,7 @@ export class WorkshopScene extends Phaser.Scene {
         repeat: -1,
         ease: 'Sine.easeInOut',
       });
-      addComicText(this, x, y + 200 * scale, 'Fahrrad fertig!', 26 * scale);
+      addComicText(this, x, y + 168 * scale, 'Fahrrad fertig!', 26 * scale);
     }
 
     for (const mission of MISSION_MAP) {
@@ -69,7 +72,16 @@ export class WorkshopScene extends Phaser.Scene {
     );
 
     const next = getNextMission();
-    if (next) {
+    if (bikeReady) {
+      createComicButton(
+        this,
+        x + 200 * scale,
+        y + 220 * scale,
+        'Probefahrt!',
+        () => this.scene.start('RideScene'),
+        COLORS.success,
+      );
+    } else if (next) {
       createComicButton(this, x + 200 * scale, y + 220 * scale, 'Weiter!', () => {
         this.startMission(next);
       });
@@ -130,6 +142,8 @@ export class WorkshopScene extends Phaser.Scene {
       this.scene.start('Mission01Wheels');
     } else if (missionId === 'mission-02-pedals') {
       this.scene.start('Mission02Pedals');
+    } else if (missionId === 'mission-03-handlebar') {
+      this.scene.start('Mission03Handlebar');
     } else {
       this.scene.start('WorkshopScene');
     }

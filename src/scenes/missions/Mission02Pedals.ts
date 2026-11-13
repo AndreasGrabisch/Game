@@ -10,7 +10,7 @@ import {
 import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
-import { showSpeech, hideSpeech } from '../../ui/speech';
+import { hideSpeech, showSpeechIf } from '../../ui/speech';
 
 type PartId = 'pedal' | 'chain' | 'wheel';
 
@@ -78,9 +78,9 @@ export class Mission02Pedals extends Phaser.Scene {
   }
 
   private async runIntro(): Promise<void> {
-    await showSpeech(this.missionData.intro);
+    if (!(await showSpeechIf(this, this.missionData.intro))) return;
     this.instructionText?.setText(this.missionData.learn1);
-    await showSpeech(this.missionData.learn1);
+    await showSpeechIf(this, this.missionData.learn1);
   }
 
   private createOrderSlots(cx: number, cy: number, scale: number): void {
@@ -235,7 +235,7 @@ export class Mission02Pedals extends Phaser.Scene {
 
     if (this.failCount >= 2 && !this.hintShown) {
       this.hintShown = true;
-      void showSpeech(this.missionData.hint);
+      void showSpeechIf(this, this.missionData.hint);
     }
   }
 
@@ -308,7 +308,7 @@ export class Mission02Pedals extends Phaser.Scene {
       });
     }
 
-    await showSpeech(this.missionData.success);
+    if (!(await showSpeechIf(this, this.missionData.success))) return;
 
     createComicButton(this, x, y + 220 * scale, 'Zur Werkstatt!', () => {
       this.scene.start('WorkshopScene');

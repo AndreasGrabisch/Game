@@ -4,8 +4,9 @@ Eine kindgerechte 2D-Browserspiel-Sammlung für Kinder ab ca. 6 Jahren.
 
 Über die **Spiele-Auswahl** startest du einzelne Minispiele:
 
-- **Samuel baut sein Fahrrad** — Missionen und Werkstatt
+- **Samuel baut sein Fahrrad** — Missionen, Werkstatt und Probefahrt
 - **Detektivspiel** — Detektiv-Sachen in einem 9-Schubladen-Schrank finden (falsche Schublade → alles mischt sich neu)
+- **Farben sortieren** — bunte Sachen in den Eimer mit der gleichen Farbe legen
 
 ## Online spielen
 
@@ -53,7 +54,8 @@ npm run preview
 |---|-------|--------|
 | 1 | Runde Räder | ✅ Spielbar |
 | 2 | Pedale & Kette | ✅ Spielbar |
-| 3 | Lenker | 🔜 Geplant |
+| 3 | Lenker | ✅ Spielbar |
+| — | Probefahrt | ✅ Nach allen Missionen |
 
 ## Technik
 
@@ -63,5 +65,6 @@ npm run preview
 
 ## Steuerung
 
-- **Maus / Touch:** Räder ziehen und auf die Achsen legen
+- **Maus / Touch:** Räder ziehen, Lenker bewegen, Farben sortieren, über Pfützen springen
+- **Tastatur:** Pfeiltasten lenken, Leertaste springt
 - **Buttons:** Groß und touchfreundlich

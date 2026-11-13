@@ -35,7 +35,7 @@ export const MISSIONS: Record<string, MissionData> = {
     title: 'Lenker',
     part: 'handlebar',
     intro: 'Fast fertig! Mit dem Lenker kann ich steuern, wohin ich fahren will.',
-    learn1: 'Bewege den Lenker nach links und rechts — so ändert sich die Richtung!',
+    learn1: 'Bewege den Lenker nach links und rechts — oder tippe auf die Knöpfe. So ändert sich die Richtung!',
     learn2: 'Der Lenker ist mit dem Vorderrad verbunden.',
     success: "Mein Fahrrad ist fertig! Los geht's!",
     hint: 'Tipp: Links lenken = nach links fahren.',

@@ -12,7 +12,7 @@ import {
 import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
-import { showSpeech, hideSpeech } from '../../ui/speech';
+import { hideSpeech, showSpeechIf } from '../../ui/speech';
 
 interface DraggableWheel {
   container: Phaser.GameObjects.Container;
@@ -82,9 +82,9 @@ export class Mission01Wheels extends Phaser.Scene {
   }
 
   private async runIntro(): Promise<void> {
-    await showSpeech(this.missionData.intro);
+    if (!(await showSpeechIf(this, this.missionData.intro))) return;
     this.instructionText?.setText(this.missionData.learn1);
-    await showSpeech(this.missionData.learn1);
+    await showSpeechIf(this, this.missionData.learn1);
   }
 
   private createDraggableWheels(cx: number, cy: number, scale: number): void {
@@ -101,8 +101,14 @@ export class Mission01Wheels extends Phaser.Scene {
         : drawSquareWheel(this, 0, 0, 56 * scale);
 
       const container = this.add.container(item.x, item.y, [wheel]);
-      container.setSize(80 * scale, 80 * scale);
-      container.setInteractive({ draggable: true, useHandCursor: true });
+      const hit = 88 * scale;
+      container.setSize(hit, hit);
+      container.setInteractive({
+        hitArea: new Phaser.Geom.Rectangle(0, 0, hit, hit),
+        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+        draggable: true,
+        useHandCursor: true,
+      });
 
       const data: DraggableWheel = {
         container,
@@ -182,7 +188,7 @@ export class Mission01Wheels extends Phaser.Scene {
 
     if (this.failCount >= 2 && !this.hintShown) {
       this.hintShown = true;
-      void showSpeech(this.missionData.hint);
+      void showSpeechIf(this, this.missionData.hint);
     }
   }
 
@@ -244,7 +250,7 @@ export class Mission01Wheels extends Phaser.Scene {
       });
     }
 
-    await showSpeech(this.missionData.success);
+    if (!(await showSpeechIf(this, this.missionData.success))) return;
 
     createComicButton(this, x, y + 200 * scale, 'Zur Werkstatt!', () => {
       this.scene.start('WorkshopScene');

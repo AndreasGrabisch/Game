@@ -10,6 +10,7 @@ export interface DetectiveProgress {
   daily?: DailyMissionState;
   /** Schubladen-Mischen überspringen / sehr kurz (nur lokal). */
   fastShuffle?: boolean;
+  hubTutorialSeen?: boolean;
 }
 
 const DEFAULT: DetectiveProgress = {
@@ -31,6 +32,7 @@ export function loadDetectiveProgress(): DetectiveProgress {
       badges: parsed.badges ?? [],
       daily: parsed.daily,
       fastShuffle: parsed.fastShuffle ?? false,
+      hubTutorialSeen: parsed.hubTutorialSeen ?? false,
     };
   } catch {
     return { ...DEFAULT };
@@ -87,6 +89,16 @@ export function isFastShuffleEnabled(): boolean {
 export function setFastShuffle(enabled: boolean): void {
   const progress = loadDetectiveProgress();
   progress.fastShuffle = enabled;
+  saveDetectiveProgress(progress);
+}
+
+export function hasSeenDetectiveHubTutorial(): boolean {
+  return loadDetectiveProgress().hubTutorialSeen === true;
+}
+
+export function setDetectiveHubTutorialSeen(): void {
+  const progress = loadDetectiveProgress();
+  progress.hubTutorialSeen = true;
   saveDetectiveProgress(progress);
 }
 

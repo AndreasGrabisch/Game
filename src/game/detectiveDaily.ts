@@ -52,21 +52,31 @@ export function getOrCreateDailyMission(): DailyMissionState {
   return daily;
 }
 
-export function bumpDailyMission(kind: DailyMissionKind, amount = 1): DailyMissionState {
+export interface DailyMissionBumpResult {
+  daily: DailyMissionState;
+  justCompleted: boolean;
+}
+
+export function bumpDailyMission(kind: DailyMissionKind, amount = 1): DailyMissionBumpResult {
   const progress = loadDetectiveProgress();
   const daily = getOrCreateDailyMission();
-  if (daily.done || daily.kind !== kind) return daily;
+  if (daily.done || daily.kind !== kind) {
+    return { daily, justCompleted: false };
+  }
 
+  const wasDone = daily.done;
   daily.progress = Math.min(daily.target, daily.progress + amount);
-  if (daily.progress >= daily.target) {
+  let justCompleted = false;
+  if (!wasDone && daily.progress >= daily.target) {
     daily.done = true;
+    justCompleted = true;
     if (!progress.stickers.includes(daily.rewardEmoji)) {
       progress.stickers.push(daily.rewardEmoji);
     }
   }
   progress.daily = daily;
   saveDetectiveProgress(progress);
-  return daily;
+  return { daily, justCompleted };
 }
 
 export function dailyMissionSpeech(daily: DailyMissionState): string {

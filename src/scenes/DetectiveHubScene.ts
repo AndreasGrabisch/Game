@@ -8,9 +8,11 @@ import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import {
   getDetectiveCaseStars,
   getTotalDetectiveStars,
+  hasSeenDetectiveHubTutorial,
   isDetectiveCaseComplete,
   isDetectiveCaseUnlocked,
   loadDetectiveProgress,
+  setDetectiveHubTutorialSeen,
 } from '../game/detectiveProgress';
 import { DETECTIVE_MARKER_GREEN } from '../game/detectiveSamuel';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
@@ -36,7 +38,14 @@ export class DetectiveHubScene extends Phaser.Scene {
       fontSize: `${36 * s}px`,
     });
     companion.setDepth(4);
-    void companion;
+    this.tweens.add({
+      targets: companion,
+      y: companion.y - 6 * s,
+      duration: 1100,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
 
     const cases = [...DETECTIVE_CASES].sort((a, b) => a.order - b.order);
     if (layout.portrait) {
@@ -59,14 +68,49 @@ export class DetectiveHubScene extends Phaser.Scene {
     }
 
     const btnY = y + (layout.portrait ? 228 : 210) * s;
-    createComicButton(this, x - 120 * s, btnY, '🖼️ Wand', () => this.scene.start('DetectiveWallScene'), DETECTIVE_MARKER_GREEN, 120);
-    createComicButton(this, x + 20 * s, btnY, '🔊 Vorlesen', () => void this.readHubAloud(), 0xff6b35, 140);
-    createComicButton(this, x + 150 * s, btnY, '← Menü', () => this.scene.start('HubScene'), 0x5b6ee1, 110);
+    const btnW = layout.portrait ? 104 : 120;
+    createComicButton(this, x - 125 * s, btnY, '🖼️ Wand', () => this.scene.start('DetectiveWallScene'), DETECTIVE_MARKER_GREEN, btnW);
+    createComicButton(this, x + 5 * s, btnY, '🔊 Vorlesen', () => void this.readHubAloud(), 0xff6b35, btnW + 12);
+    createComicButton(this, x + 130 * s, btnY, '← Menü', () => this.scene.start('HubScene'), 0x5b6ee1, btnW);
 
     this.time.delayedCall(400, () => {
       if (!this.scene.isActive()) return;
+      if (!hasSeenDetectiveHubTutorial()) {
+        this.showProgressTutorial(x, y, s, layout.portrait);
+        return;
+      }
       void showSpeechIf(this, 'Willkommen beim Detektiv-Spiel! Wähle einen Fall oder schau dir deine Wand an.');
     });
+  }
+
+  private showProgressTutorial(x: number, y: number, scale: number, portrait: boolean): void {
+    const overlay = this.add.container(0, 0).setDepth(80);
+    const veil = this.add.rectangle(x, y, this.scale.width, this.scale.height, 0x000000, 0.45);
+    const panel = drawComicPanel(this, x, y, portrait ? 340 * scale : 520 * scale, portrait ? 280 * scale : 240 * scale);
+    const title = addComicText(this, x, y - 72 * scale, 'So geht\'s!', 30 * scale);
+    const body = this.add
+      .text(x, y - 12 * scale, '🕵️ Fall 1 ist frei.\n⭐ Mehr Sterne = besser.\n🔒 Nächster Fall nach dem vorherigen.\n📋 Tages-Mission gibt Extra-Sticker!', {
+        fontFamily: 'Fredoka, Comic Sans MS, cursive',
+        fontSize: `${portrait ? 17 : 19}px`,
+        color: '#1a1a2e',
+        align: 'center',
+        lineSpacing: 6,
+      })
+      .setOrigin(0.5);
+    const readBtn = createComicButton(this, x - 95 * scale, y + 82 * scale, '🔊 Vorlesen', () => {
+      void showSpeechIf(
+        this,
+        'Fall eins ist frei. Sterne sammeln. Den nächsten Fall schaltest du frei, wenn der vorherige geschafft ist. Die Tages-Mission bringt Extra-Sticker.',
+      );
+    }, 0xff6b35, 130);
+    const okBtn = createComicButton(this, x + 95 * scale, y + 82 * scale, 'Los!', () => {
+      setDetectiveHubTutorialSeen();
+      overlay.destroy(true);
+      void showSpeechIf(this, 'Super! Wähle deinen ersten Fall.');
+    }, DETECTIVE_MARKER_GREEN, 120);
+    overlay.add([veil, panel, title, body, readBtn, okBtn]);
+    title.setDepth(81);
+    body.setDepth(81);
   }
 
   private async readHubAloud(): Promise<void> {
@@ -75,7 +119,9 @@ export class DetectiveHubScene extends Phaser.Scene {
       'Detektiv-Fälle.',
       ...DETECTIVE_CASES.map((c) => {
         const unlocked = isDetectiveCaseUnlocked(c.id, c.unlockRequires);
-        return unlocked ? c.title : `${c.title} ist noch gesperrt.`;
+        const stars = getDetectiveCaseStars(c.id);
+        if (!unlocked) return `${c.title} ist noch gesperrt.`;
+        return stars > 0 ? `${c.title}, ${stars} Sterne.` : c.title;
       }),
       dailyMissionSpeech(daily),
     ];
@@ -85,21 +131,51 @@ export class DetectiveHubScene extends Phaser.Scene {
   private drawDailyMission(x: number, y: number, scale: number, portrait: boolean): void {
     const daily = getOrCreateDailyMission();
     const w = portrait ? Math.min(320 * scale, this.scale.width - 24) : 500 * scale;
-    const panel = drawComicPanel(this, x, y, w, portrait ? 56 * scale : 52 * scale);
+    const h = portrait ? 62 * scale : 58 * scale;
+    const panel = drawComicPanel(this, x, y, w, h);
     panel.setDepth(1);
+
+    const ratio = daily.target > 0 ? daily.progress / daily.target : 0;
+    const barW = w - 48 * scale;
+    const barY = y + (portrait ? 22 : 20) * scale;
+    const barBg = this.add.rectangle(x, barY, barW, 10 * scale, 0xdddddd);
+    const barFill = this.add.rectangle(x - barW / 2 + (barW * ratio) / 2, barY, barW * ratio, 10 * scale, daily.done ? COLORS.success : DETECTIVE_MARKER_GREEN);
+    barFill.setOrigin(0.5, 0.5);
+    barBg.setDepth(2);
+    barFill.setDepth(2);
+
     const status = daily.done
-      ? `✅ ${daily.rewardEmoji} geschafft!`
-      : `📋 ${daily.label} (${daily.progress}/${daily.target})`;
-    this.add
-      .text(x, y, status, {
+      ? `✅ Tages-Mission geschafft! ${daily.rewardEmoji}`
+      : `📋 ${daily.label} — ${daily.progress}/${daily.target}`;
+    const statusText = this.add
+      .text(x, y - (portrait ? 12 : 10) * scale, status, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${portrait ? 15 : 17}px`,
-        color: '#1a1a2e',
+        fontSize: `${portrait ? 14 : 16}px`,
+        color: daily.done ? '#2d6a45' : '#1a1a2e',
         fontStyle: 'bold',
         align: 'center',
         wordWrap: { width: w - 24 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(3);
+
+    if (daily.done) {
+      const sparkle = this.add.text(x + w / 2 - 22 * scale, y - h / 2 + 16 * scale, daily.rewardEmoji, {
+        fontSize: `${22 * scale}px`,
+      });
+      sparkle.setDepth(4);
+      this.tweens.add({
+        targets: sparkle,
+        scale: 1.25,
+        angle: 12,
+        duration: 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+
+    void [statusText, barBg, barFill];
   }
 
   private drawRewardsBar(x: number, y: number, scale: number, portrait: boolean): void {
@@ -109,7 +185,18 @@ export class DetectiveHubScene extends Phaser.Scene {
     const panel = drawComicPanel(this, x, y, panelW, portrait ? 64 * scale : 58 * scale);
     panel.setDepth(1);
 
-    addComicText(this, x - panelW / 2 + 70 * scale, y - 4 * scale, `⭐ ${totalStars}`, 22 * scale).setOrigin(0.5);
+    const starLabel = addComicText(this, x - panelW / 2 + 70 * scale, y - 4 * scale, `⭐ ${totalStars}`, 22 * scale);
+    starLabel.setOrigin(0.5);
+    if (totalStars > 0) {
+      this.tweens.add({
+        targets: starLabel,
+        scale: 1.12,
+        duration: 450,
+        yoyo: true,
+        repeat: 2,
+        ease: 'Sine.easeInOut',
+      });
+    }
 
     const stickerLabel = progress.stickers.length > 0 ? progress.stickers.join(' ') : '—';
     this.add
@@ -130,7 +217,15 @@ export class DetectiveHubScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     if (totalStars > 0) {
-      drawStar(this, x - panelW / 2 + 28 * scale, y - 8 * scale, 16 * scale, true);
+      const starGfx = drawStar(this, x - panelW / 2 + 28 * scale, y - 8 * scale, 16 * scale, true);
+      this.tweens.add({
+        targets: starGfx,
+        angle: 20,
+        duration: 600,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
     }
   }
 
@@ -174,7 +269,28 @@ export class DetectiveHubScene extends Phaser.Scene {
 
     const starRowY = y + (height > 120 * scale ? 44 * scale : 34 * scale);
     for (let i = 0; i < 3; i++) {
-      drawStar(this, x + width / 2 - 64 * scale + i * 26 * scale, starRowY, 13 * scale, i < stars);
+      const filled = i < stars;
+      const starGfx = drawStar(this, x + width / 2 - 64 * scale + i * 26 * scale, starRowY, 13 * scale, filled);
+      if (filled) {
+        this.tweens.add({
+          targets: starGfx,
+          scale: 1.2,
+          duration: 320 + i * 80,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
+    }
+    if (stars > 0) {
+      this.add
+        .text(x + width / 2 - 64 * scale + 80 * scale, starRowY, `${stars}/3`, {
+          fontFamily: 'Fredoka, Comic Sans MS, cursive',
+          fontSize: `${12 * scale}px`,
+          color: '#3d7a54',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0, 0.5);
     }
 
     if (done) {

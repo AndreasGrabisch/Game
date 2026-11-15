@@ -6,10 +6,12 @@ import {
   addComicText,
   createComicButton,
   drawStar,
+  floatFeedback,
 } from '../game/graphics';
 import { getGameCenter } from './BootScene';
-import { attachIdleBounce } from '../game/characterCompanion';
+import { attachIdleBounce, reactCompanionCheer } from '../game/characterCompanion';
 import { drawLockIcon, drawWorkshopBackdrop } from '../game/sceneBackgrounds';
+import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
@@ -21,6 +23,12 @@ import {
 } from '../game/Progress';
 import { MISSIONS } from '../data/missions';
 
+const PART_ICONS: Record<VehiclePart, string> = {
+  wheels: '🛞',
+  pedals: '⚙️',
+  handlebar: '🎯',
+};
+
 const MISSION_MAP: { id: string; part: VehiclePart; x: number; y: number }[] = [
   { id: 'mission-01-wheels', part: 'wheels', x: -180, y: -60 },
   { id: 'mission-02-pedals', part: 'pedals', x: 0, y: -120 },
@@ -28,6 +36,8 @@ const MISSION_MAP: { id: string; part: VehiclePart; x: number; y: number }[] = [
 ];
 
 export class WorkshopScene extends Phaser.Scene {
+  private samuelCompanion?: Phaser.GameObjects.Container;
+
   constructor() {
     super({ key: 'WorkshopScene' });
   }
@@ -37,63 +47,67 @@ export class WorkshopScene extends Phaser.Scene {
     bindSceneMusic(this, 'workshop');
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
+    const layout = getDetectiveLayoutMode(this);
+    const s = scale * (layout.portrait ? 0.86 : 1);
     const progress = loadProgress();
+    const done = progress.completedMissions.length;
 
-    addComicText(this, x, y - 220 * scale, 'Samuels Werkstatt', 32 * scale);
+    addComicText(this, x, y - (layout.portrait ? 248 : 220) * s, '🚲 Werkstatt', 32 * s);
+    addComicText(this, x, y - (layout.portrait ? 212 : 186) * s, `Ziel: ${done}/3 Teile`, 20 * s);
 
-    const bike = drawBike(this, x, y + 80 * scale, 1.3 * scale, {
+    const bikeY = y + (layout.portrait ? 100 : 80) * s;
+    drawBike(this, x, bikeY, (layout.portrait ? 1.05 : 1.3) * s, {
       showFrame: true,
       showWheels: isPartUnlocked('wheels'),
       showPedals: isPartUnlocked('pedals'),
       showHandlebar: isPartUnlocked('handlebar'),
     });
 
-    const workshopSamuel = drawSamuel(this, x - 200 * scale, y + 60 * scale, 1.0 * scale);
-    attachIdleBounce(this, workshopSamuel, 5 * scale, 1200);
+    this.samuelCompanion = drawSamuel(
+      this,
+      x - (layout.portrait ? 120 : 200) * s,
+      bikeY + 20 * s,
+      (layout.portrait ? 0.82 : 1) * s,
+    );
+    attachIdleBounce(this, this.samuelCompanion, 5 * s, 1200);
 
     const bikeReady =
       isPartUnlocked('wheels') && isPartUnlocked('pedals') && isPartUnlocked('handlebar');
 
     if (bikeReady) {
       feedbackSounds.workshopCheer();
-      this.tweens.add({
-        targets: bike,
-        x: x + 30 * scale,
-        duration: 2000,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
-      addComicText(this, x, y + 168 * scale, 'Fahrrad fertig!', 26 * scale);
+      reactCompanionCheer(this, this.samuelCompanion);
+      addComicText(this, x, y + (layout.portrait ? 168 : 168) * s, '✅ Fertig!', 26 * s);
     }
 
-    for (const mission of MISSION_MAP) {
-      this.createMissionNode(x, y, scale, mission, progress);
+    const missionLayout = layout.portrait
+      ? MISSION_MAP.map((m, index) => ({ ...m, x: 0, y: -100 + index * 72 }))
+      : MISSION_MAP;
+
+    for (const mission of missionLayout) {
+      this.createMissionNode(x, y, s, mission, progress, getNextMission() === mission.id);
     }
 
-    createComicButton(
-      this,
-      x - 200 * scale,
-      y + 220 * scale,
-      'Zuhause',
-      () => transitionToScene(this, 'HubScene'),
-      0x5b6ee1,
-    );
+    const btnY = y + (layout.portrait ? 250 : 220) * s;
+    createComicButton(this, x - (layout.portrait ? 115 : 200) * s, btnY, 'Zuhause', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, layout.portrait ? 120 : 140);
 
     const next = getNextMission();
     if (bikeReady) {
       createComicButton(
         this,
-        x + 200 * scale,
-        y + 220 * scale,
-        'Probefahrt!',
-        () => this.scene.start('RideScene'),
+        x + (layout.portrait ? 115 : 200) * s,
+        btnY,
+        '🏁 Fahrt',
+        () => transitionToScene(this, 'RideScene'),
         COLORS.success,
+        layout.portrait ? 120 : 150,
       );
     } else if (next) {
-      createComicButton(this, x + 200 * scale, y + 220 * scale, 'Weiter!', () => {
+      const label = next === 'mission-01-wheels' ? '▶ Los!' : '▶ Weiter';
+      createComicButton(this, x + (layout.portrait ? 115 : 200) * s, btnY, label, () => {
+        feedbackSounds.tap();
         this.startMission(next);
-      });
+      }, COLORS.bikeFrame, layout.portrait ? 120 : 150);
     }
   }
 
@@ -103,41 +117,62 @@ export class WorkshopScene extends Phaser.Scene {
     scale: number,
     mission: (typeof MISSION_MAP)[0],
     progress: ReturnType<typeof loadProgress>,
+    isNext: boolean,
   ): void {
     const mx = cx + mission.x * scale;
     const my = cy + mission.y * scale;
     const available = isMissionAvailable(mission.id);
     const completed = progress.completedMissions.includes(mission.id);
     const locked = !available;
+    const radius = 46 * scale;
 
     const color = completed ? COLORS.success : locked ? 0xcccccc : COLORS.bikeFrame;
-    const node = this.add.circle(mx, my, 36 * scale, color);
-    node.setStrokeStyle(3, COLORS.outline);
+    const node = this.add.circle(mx, my, radius, color);
+    node.setStrokeStyle(4, COLORS.outline);
 
-    const label = this.add
-      .text(mx, my, PART_LABELS[mission.part].split(' ')[0], {
-        fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${14 * scale}px`,
-        color: '#ffffff',
-        fontStyle: 'bold',
-      })
+    this.add
+      .text(mx, my - 6 * scale, PART_ICONS[mission.part], { fontSize: `${28 * scale}px` })
       .setOrigin(0.5);
+
+    if (!locked) {
+      this.add
+        .text(mx, my + 22 * scale, PART_LABELS[mission.part].split(' ')[0], {
+          fontFamily: 'Fredoka, Comic Sans MS, cursive',
+          fontSize: `${12 * scale}px`,
+          color: '#ffffff',
+          fontStyle: 'bold',
+        })
+        .setOrigin(0.5);
+    }
 
     if (completed) {
       const stars = progress.stars[mission.id] ?? 1;
       for (let i = 0; i < stars; i++) {
-        drawStar(this, mx - 20 * scale + i * 20 * scale, my - 50 * scale, 10 * scale);
+        drawStar(this, mx - 20 * scale + i * 20 * scale, my - 52 * scale, 11 * scale);
       }
     }
 
     if (locked) {
-      drawLockIcon(this, mx, my + 4 * scale, scale * 0.75);
-      label.setVisible(false);
+      drawLockIcon(this, mx, my + 4 * scale, scale * 0.85);
     } else {
-      node.setInteractive({ useHandCursor: true });
-      node.on('pointerdown', () => this.startMission(mission.id));
-      node.on('pointerover', () => node.setFillStyle(color, 0.8));
-      node.on('pointerout', () => node.setFillStyle(color, 1));
+      const hit = this.add.circle(mx, my, radius + 14 * scale, 0xffffff, 0.001);
+      hit.setInteractive({ useHandCursor: true });
+      hit.on('pointerdown', () => {
+        feedbackSounds.tap();
+        reactCompanionCheer(this, this.samuelCompanion);
+        this.startMission(mission.id);
+      });
+      if (isNext) {
+        this.tweens.add({
+          targets: [node, hit],
+          scale: 1.06,
+          duration: 600,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+        floatFeedback(this, mx, my - 64 * scale, 'Hier!', '#ff6b35', 16 * scale);
+      }
     }
   }
 

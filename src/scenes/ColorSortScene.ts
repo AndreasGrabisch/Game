@@ -4,7 +4,7 @@ import { addComicText, createComicButton, drawStar, floatFeedback } from '../gam
 import { feedbackSounds } from '../game/feedbackAudio';
 import { starsForMistakes } from '../game/scoring';
 import { getGameCenter } from './BootScene';
-import { spawnSamuelCompanion } from '../game/characterCompanion';
+import { reactCompanionCheer, reactCompanionOops, spawnSamuelCompanion } from '../game/characterCompanion';
 import { drawColorSortBackdrop } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { bindSceneMusic } from '../game/sceneMusic';
@@ -79,6 +79,7 @@ export class ColorSortScene extends Phaser.Scene {
   private layoutScale = 1;
   private total = 0;
   private counterText?: Phaser.GameObjects.Text;
+  private samuelCompanion?: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: 'ColorSortScene' });
@@ -100,35 +101,40 @@ export class ColorSortScene extends Phaser.Scene {
     const layout = getDetectiveLayoutMode(this);
     this.layoutScale = scale * (layout.portrait ? 0.85 : 1);
 
-    spawnSamuelCompanion(
+    this.samuelCompanion = spawnSamuelCompanion(
       this,
       x - (layout.portrait ? 150 : 340) * this.layoutScale,
       y + (layout.portrait ? 210 : 120) * this.layoutScale,
       0.85 * this.layoutScale,
     );
 
-    addComicText(this, x, y - 236 * scale, 'Farben sortieren', 34 * scale);
+    const titleY = layout.portrait ? y - 252 * this.layoutScale : y - 236 * scale;
+    addComicText(this, x, titleY, '🎨 Farben', 32 * this.layoutScale);
+    this.drawGoalIcons(x, titleY + 38 * this.layoutScale, this.layoutScale);
     const best = loadBest();
-    const subtitle = best > 0 ? `Rekord: ${best} Sterne` : 'Gleiche Farbe, gleicher Eimer';
-    addComicText(this, x, y - 198 * scale, subtitle, 18 * scale);
-    this.counterText = addComicText(this, x, y - 168 * scale, '0 / 8', 18 * scale);
+    if (best > 0) {
+      addComicText(this, x, titleY + 70 * this.layoutScale, `⭐ Best: ${best}`, 16 * this.layoutScale);
+    }
+    this.counterText = addComicText(this, x, titleY + (best > 0 ? 94 : 72) * this.layoutScale, '0 / 4', 20 * this.layoutScale);
 
-    this.createBuckets(x, y + 168 * scale, scale);
-    this.createItems(x, y - 70 * scale, scale);
+    const bucketY = y + (layout.portrait ? 188 : 168) * this.layoutScale;
+    const itemsY = y + (layout.portrait ? -48 : -70) * this.layoutScale;
+    this.createBuckets(x, bucketY, this.layoutScale, layout.portrait);
+    this.createItems(x, itemsY, this.layoutScale, layout.portrait);
     this.total = this.items.length;
     this.counterText.setText(`0 / ${this.total}`);
 
     createComicButton(
       this,
-      x + 340 * scale,
-      y - 236 * scale,
-      'Zurück',
+      x + (layout.portrait ? 140 : 340) * this.layoutScale,
+      titleY - 8 * this.layoutScale,
+      '←',
       () => {
         hideSpeech();
         this.scene.start('HubScene');
       },
       0x5b6ee1,
-      150,
+      layout.portrait ? 72 : 100,
     ).setDepth(12);
 
     this.input.once('pointerdown', () => {
@@ -145,7 +151,7 @@ export class ColorSortScene extends Phaser.Scene {
   private async runIntro(): Promise<void> {
     await showSpeechIf(
       this,
-      'Sortiere die bunten Sachen! Tippe eine Sache an und dann den Eimer — oder zieh sie hinein.',
+      'Tippe eine Farbe, dann den passenden Eimer.',
     );
   }
 
@@ -153,19 +159,31 @@ export class ColorSortScene extends Phaser.Scene {
     drawColorSortBackdrop(this);
   }
 
-  private createBuckets(centerX: number, y: number, scale: number): void {
+  private drawGoalIcons(cx: number, cy: number, scale: number): void {
     COLOR_DEFS.forEach((def, index) => {
-      const x = centerX + (index - 1.5) * 168 * scale;
-      const bucket = this.add.container(x, y);
+      const dot = this.add.circle(cx - 54 * scale + index * 36 * scale, cy, 14 * scale, def.tint);
+      dot.setStrokeStyle(3, COLORS.outline);
+    });
+  }
+
+  private createBuckets(centerX: number, y: number, scale: number, portrait: boolean): void {
+    COLOR_DEFS.forEach((def, index) => {
+      const col = portrait ? index % 2 : index;
+      const row = portrait ? Math.floor(index / 2) : 0;
+      const x = portrait
+        ? centerX + (col === 0 ? -78 : 78) * scale
+        : centerX + (index - 1.5) * 168 * scale;
+      const bucketY = y + (portrait ? row * 94 * scale : 0);
+      const bucket = this.add.container(x, bucketY);
       bucket.setDepth(2);
 
-      const body = this.add.rectangle(0, 12 * scale, 128 * scale, 72 * scale, def.tint);
+      const body = this.add.rectangle(0, 12 * scale, (portrait ? 118 : 128) * scale, 72 * scale, def.tint);
       body.setStrokeStyle(3 * scale, COLORS.outline);
       const rim = this.add.rectangle(0, -28 * scale, 140 * scale, 16 * scale, def.tint);
       rim.setStrokeStyle(3 * scale, COLORS.outline);
       const icon = this.add.circle(-42 * scale, -8 * scale, 12 * scale, COLORS.white, 0.35);
       icon.setStrokeStyle(2 * scale, def.tint);
-      const hit = this.add.rectangle(0, 4 * scale, 140 * scale, 108 * scale, 0xffffff, 0.001);
+      const hit = this.add.rectangle(0, 4 * scale, 156 * scale, 118 * scale, 0xffffff, 0.001);
       hit.setInteractive({ useHandCursor: true });
       const label = this.add
         .text(0, 8 * scale, def.label, {
@@ -187,28 +205,26 @@ export class ColorSortScene extends Phaser.Scene {
       bucket.add([body, rim, icon, label, countText, hit]);
       hit.on('pointerdown', () => this.onBucketChosen(def.id));
 
-      this.buckets.push({ id: def.id, x, y, countText, count: 0 });
+      this.buckets.push({ id: def.id, x, y: bucketY, countText, count: 0 });
     });
   }
 
-  private createItems(centerX: number, y: number, scale: number): void {
-    const tray = this.add.rectangle(centerX, y + 36 * scale, 520 * scale, 168 * scale, COLORS.panel, 0.92);
+  private createItems(centerX: number, y: number, scale: number, portrait: boolean): void {
+    const trayW = portrait ? 300 * scale : 420 * scale;
+    const tray = this.add.rectangle(centerX, y + 24 * scale, trayW, (portrait ? 110 : 140) * scale, COLORS.panel, 0.92);
     tray.setStrokeStyle(3 * scale, COLORS.outline);
 
-    const ids: ColorId[] = [];
-    for (const def of COLOR_DEFS) {
-      ids.push(def.id, def.id);
-    }
+    const ids: ColorId[] = COLOR_DEFS.map((def) => def.id);
     Phaser.Utils.Array.Shuffle(ids);
 
     ids.forEach((id, index) => {
       const col = index % 4;
       const row = Math.floor(index / 4);
-      const homeX = centerX + (col - 1.5) * 112 * scale;
-      const homeY = y + row * 74 * scale;
+      const homeX = centerX + (col - 1.5) * (portrait ? 72 : 96) * scale;
+      const homeY = y + row * (portrait ? 0 : 8) * scale;
       const container = this.add.container(homeX, homeY);
       container.setDepth(4);
-      const hit = 76 * scale;
+      const hit = 88 * scale;
       container.setSize(hit, hit);
       const ring = this.add.circle(0, 0, 30 * scale);
       ring.setStrokeStyle(4 * scale, COLORS.star);
@@ -304,6 +320,7 @@ export class ColorSortScene extends Phaser.Scene {
     if (item.id !== bucketId) {
       this.mistakes += 1;
       feedbackSounds.miss();
+      reactCompanionOops(this, this.samuelCompanion);
       this.cameras.main.shake(70, 0.003);
       floatFeedback(
         this,
@@ -333,6 +350,7 @@ export class ColorSortScene extends Phaser.Scene {
     (item.container.getData('ring') as Phaser.GameObjects.Arc).setVisible(false);
     item.container.setScale(1);
     feedbackSounds.colorPop();
+    reactCompanionCheer(this, this.samuelCompanion);
 
     bucket.count += 1;
     bucket.countText.setText(String(bucket.count));

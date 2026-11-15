@@ -4,6 +4,7 @@ import { drawSamuel, drawBike, addComicText, createComicButton } from '../game/g
 import { getGameCenter } from './BootScene';
 import { resetProgress } from '../game/Progress';
 import { resetDetectiveProgress } from '../game/detectiveProgress';
+import { resetAppTreasury } from '../game/appTreasury';
 import { drawPlaygroundSky } from '../game/appHomeGraphics';
 import { getMuteButtonLabel, toggleGameAudio } from '../game/audioUi';
 import { bindSceneMusic } from '../game/sceneMusic';
@@ -53,6 +54,7 @@ export class MenuScene extends Phaser.Scene {
       () => {
         resetProgress();
         resetDetectiveProgress();
+        resetAppTreasury();
         void showSpeechIf(this, 'Alles ist wieder wie am ersten Tag.');
         transitionToScene(this, 'HubScene');
       },

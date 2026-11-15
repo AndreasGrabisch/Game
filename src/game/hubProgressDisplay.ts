@@ -5,6 +5,7 @@ import { DETECTIVE_CASES } from '../data/detectiveCases';
 import { loadDetectiveProgress } from './detectiveProgress';
 import { loadProgress } from './Progress';
 import { CORE_BIKE_MISSIONS, BIKE_MISSION_ORDER } from './kidDifficultyCurve';
+import type { AppRewardSummary } from './appProgress';
 
 export function drawHubProgressBoard(
   scene: Phaser.Scene,
@@ -12,15 +13,15 @@ export function drawHubProgressBoard(
   y: number,
   scale: number,
   portrait: boolean,
-  totalStars: number,
+  summary: AppRewardSummary,
 ): Phaser.GameObjects.Container {
   const root = scene.add.container(x, y);
   const w = portrait ? Math.min(340 * scale, scene.scale.width - 24) : 600 * scale;
-  const h = portrait ? 118 * scale : 96 * scale;
+  const h = portrait ? 132 * scale : 108 * scale;
   const panel = drawComicPanel(scene, 0, 0, w, h);
   root.add(panel);
 
-  const starText = scene.add.text(-w / 2 + 52 * scale, -h / 2 + 12 * scale, `⭐ ${totalStars}`, {
+  const starText = scene.add.text(-w / 2 + 52 * scale, -h / 2 + 12 * scale, `⭐ ${summary.totalStars}`, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',
     fontSize: `${22 * scale}px`,
     color: '#1a1a2e',
@@ -59,6 +60,18 @@ export function drawHubProgressBoard(
   });
   cap.setOrigin(0.5, 1);
   root.add(cap);
+
+  const dailyLine = summary.dailyDone
+    ? `📋 Heute: ✅ ${summary.dailyEmoji}`
+    : `📋 Heute: ${summary.dailyProgress} ${summary.dailyEmoji}`;
+  const daily = scene.add.text(-w / 2 + 18 * scale, h / 2 - (portrait ? 6 : 4) * scale, dailyLine, {
+    fontFamily: 'Fredoka, Comic Sans MS, cursive',
+    fontSize: `${12}px`,
+    color: summary.dailyDone ? '#2d6a45' : '#444466',
+    fontStyle: 'bold',
+  });
+  daily.setOrigin(0, 1);
+  root.add(daily);
 
   root.setDepth(1);
   return root;

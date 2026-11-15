@@ -14,6 +14,7 @@ import { Mission02Pedals } from './scenes/missions/Mission02Pedals';
 import { Mission03Handlebar } from './scenes/missions/Mission03Handlebar';
 import { Mission04Bell } from './scenes/missions/Mission04Bell';
 import { ComingSoonScene } from './scenes/ComingSoonScene';
+import { TreasureChestScene } from './scenes/TreasureChestScene';
 import { RideScene } from './scenes/RideScene';
 import { ColorSortScene } from './scenes/ColorSortScene';
 
@@ -42,6 +43,7 @@ const config: Phaser.Types.Core.GameConfig = {
     Mission03Handlebar,
     Mission04Bell,
     ComingSoonScene,
+    TreasureChestScene,
     RideScene,
     ColorSortScene,
   ],

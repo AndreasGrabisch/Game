@@ -9,6 +9,7 @@ import { drawRideBackdrop } from '../game/sceneBackgrounds';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { spawnSamuelCompanion, reactCompanionCheer } from '../game/characterCompanion';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
+import { recordRideCompletion } from '../game/appTreasury';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
@@ -335,6 +336,7 @@ export class RideScene extends Phaser.Scene {
     if (this.finished) return;
     this.finished = true;
     this.riding = false;
+    recordRideCompletion();
     feedbackSounds.success();
     reactCompanionCheer(this, this.samuelCompanion);
 

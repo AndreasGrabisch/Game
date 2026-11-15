@@ -7,6 +7,8 @@ import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { MISSION_STICKER_EMOJIS } from '../game/detectiveDailyStickers';
 import { loadDetectiveProgress } from '../game/detectiveProgress';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
+import { drawDetectiveWallBackdrop } from '../game/sceneBackgrounds';
+import { attachTitleMark, drawRewardMark } from '../game/comicIcons';
 import { showSpeechIf } from '../ui/speech';
 
 export class DetectiveWallScene extends Phaser.Scene {
@@ -21,8 +23,9 @@ export class DetectiveWallScene extends Phaser.Scene {
     const s = scale * layout.scaleMul;
     const progress = loadDetectiveProgress();
 
-    this.add.rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0xf7f5ef);
-    addComicText(this, x, y - (layout.portrait ? 248 : 228) * s, '🖼️ Detektiv-Wand', 34 * s);
+    drawDetectiveWallBackdrop(this);
+    const wallTitle = addComicText(this, x, y - (layout.portrait ? 248 : 228) * s, 'Detektiv-Wand', 34 * s);
+    attachTitleMark(this, wallTitle, '🖼️');
 
     const panel = drawComicPanel(this, x, y - 20 * s, layout.portrait ? 340 * s : 600 * s, layout.portrait ? 360 * s : 300 * s);
     panel.setDepth(1);
@@ -44,18 +47,16 @@ export class DetectiveWallScene extends Phaser.Scene {
       const px = startX + col * cell;
       const py = startY + row * cell;
       const earned = progress.stickers.includes(entry.emoji);
-      const tile = this.add
-        .text(px, py, earned ? entry.emoji : '▫️', {
-          fontSize: `${earned ? 32 : 22 * s}px`,
-        })
-        .setOrigin(0.5)
-        .setAlpha(earned ? 1 : 0.45)
-        .setDepth(2);
+      const tile = drawRewardMark(this, earned ? entry.emoji : '⭐', 36 * s, true);
+      tile.setPosition(px, py);
+      tile.setAlpha(earned ? 1 : 0.35);
+      tile.setDepth(2);
 
       if (earned) {
-        tile.setInteractive({ useHandCursor: true });
-        tile.on('pointerdown', () => {
-          void showSpeechIf(this, `${entry.emoji} ${entry.label}`);
+        const hit = this.add.circle(px, py, 22 * s, 0xffffff, 0.001).setDepth(3);
+        hit.setInteractive({ useHandCursor: true });
+        hit.on('pointerdown', () => {
+          void showSpeechIf(this, entry.label);
         });
       }
     });
@@ -66,15 +67,14 @@ export class DetectiveWallScene extends Phaser.Scene {
     DETECTIVE_CASES.forEach((caseDef, index) => {
       const earned = progress.badges.includes(caseDef.id);
       const bx = x - badgeSpan / 2 + index * 56 * s;
-      const badge = this.add
-        .text(bx, badgeY, earned ? caseDef.badgeEmoji : '🔒', {
-          fontSize: `${30 * s}px`,
-        })
-        .setOrigin(0.5);
+      const badge = drawRewardMark(this, earned ? caseDef.badgeEmoji : '🔒', 34 * s, true);
+      badge.setPosition(bx, badgeY);
+      badge.setDepth(2);
       if (earned) {
-        badge.setInteractive({ useHandCursor: true });
-        badge.on('pointerdown', () => {
-          void showSpeechIf(this, `${caseDef.badgeEmoji} ${caseDef.badgeLabel}`);
+        const hit = this.add.circle(bx, badgeY, 20 * s, 0xffffff, 0.001).setDepth(3);
+        hit.setInteractive({ useHandCursor: true });
+        hit.on('pointerdown', () => {
+          void showSpeechIf(this, caseDef.badgeLabel);
         });
       }
     });

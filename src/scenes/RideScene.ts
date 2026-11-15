@@ -218,7 +218,7 @@ export class RideScene extends Phaser.Scene {
     this.progressFill.setOrigin(0, 0.5);
     this.progressFill.setStrokeStyle(0, COLORS.outline);
 
-    addComicText(this, x, barY - 28 * scale, '💧 spring! → 🏁', 20 * scale);
+    addComicText(this, x, barY - 28 * scale, 'Spring über die Pfütze!', 20 * scale);
 
     createComicButton(
       this,

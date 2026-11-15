@@ -49,7 +49,23 @@ export function runTransitionOverlay(
   const depth = 2000;
   const scale = Math.min(width / 960, height / 540);
 
-  const shade = scene.add.rectangle(cx, cy, width, height, COLORS.panel, 0.94).setDepth(depth);
+  const shade = scene.add.graphics().setDepth(depth);
+  shade.fillGradientStyle(0x9ed8ff, 0x9ed8ff, 0xfff0c2, 0x7ec850, 1);
+  shade.fillRect(0, 0, width, height);
+  shade.fillStyle(0xffffff, 0.92);
+  shade.fillEllipse(width * 0.22, height * 0.2, 130 * scale, 48 * scale);
+  shade.fillEllipse(width * 0.7, height * 0.16, 150 * scale, 54 * scale);
+  shade.fillStyle(COLORS.star, 1);
+  shade.fillCircle(width * 0.86, height * 0.18, 26 * scale);
+  shade.lineStyle(3, COLORS.outline, 0.2);
+  shade.strokeCircle(width * 0.86, height * 0.18, 26 * scale);
+  const card = scene.add.graphics().setDepth(depth + 1);
+  const cardW = 360 * scale;
+  const cardH = 210 * scale;
+  card.fillStyle(COLORS.panel, 1);
+  card.lineStyle(4, COLORS.outline);
+  card.fillRoundedRect(cx - cardW / 2, cy - cardH / 2 - 8 * scale, cardW, cardH, 20);
+  card.strokeRoundedRect(cx - cardW / 2, cy - cardH / 2 - 8 * scale, cardW, cardH, 20);
   const samuel = drawSamuel(scene, cx - 70 * scale, cy + 10 * scale, 0.55 * scale);
   samuel.setDepth(depth + 1);
   startSamuelIdle(scene, samuel, 5 * scale, 900);
@@ -77,6 +93,7 @@ export function runTransitionOverlay(
     ease: 'Sine.easeInOut',
     onComplete: () => {
       shade.destroy();
+      card.destroy();
       samuel.destroy();
       title.destroy();
       track.destroy();

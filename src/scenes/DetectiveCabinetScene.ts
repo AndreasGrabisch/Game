@@ -15,6 +15,7 @@ import { bumpDailyMission, type DailyMissionKind } from '../game/detectiveDaily'
 import { awardDetectiveCase, isFastShuffleEnabled, setFastShuffle } from '../game/detectiveProgress';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { createDrawerParts, drawCabinetItem } from '../game/detectiveGraphics';
+import { attachTitleMark } from '../game/comicIcons';
 import {
   animateSamuel,
   createDetectiveSamuel,
@@ -122,8 +123,9 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.layoutScale = scale * layout.scaleMul;
 
     const titleY = this.portraitMode ? y - 248 * this.layoutScale : y - 230 * this.layoutScale;
-    addComicText(this, x, titleY, `${this.caseDef.emoji} ${this.caseDef.title}`, 26 * this.layoutScale);
-    this.progressText = addComicText(this, x, titleY + 34 * this.layoutScale, `⭐ 0 von ${this.caseGear.length}`, 22 * this.layoutScale);
+    const caseTitle = addComicText(this, x, titleY, this.caseDef.title, 24 * this.layoutScale);
+    attachTitleMark(this, caseTitle, this.caseDef.emoji);
+    this.progressText = addComicText(this, x, titleY + 34 * this.layoutScale, `Gefunden: 0 von ${this.caseGear.length}`, 20 * this.layoutScale);
 
     this.drawerW = (this.portraitMode ? 96 : 108) * this.layoutScale;
     this.drawerH = (this.portraitMode ? 78 : 88) * this.layoutScale;
@@ -374,7 +376,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     );
 
     const headline = this.add
-      .text(x, y - 120 * scale, `${item?.emoji ?? '⭐'} Super!`, {
+      .text(x, y - 120 * scale, 'Super!', {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
         fontSize: `${36 * scale}px`,
         color: '#1a1a2e',
@@ -402,7 +404,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       this,
       x,
       y + 115 * scale,
-      '👍 Weiter',
+      'Weiter',
       () => {
         overlay.destroy(true);
         star.destroy();
@@ -422,7 +424,6 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private quickDecoyFeedback(view: DrawerView): void {
-    const item = getItemById(view.model.itemId);
     this.decoyCount += 1;
     const hintAt = Math.max(0, this.caseDef.hintAfterDecoys);
     if (this.decoyCount >= hintAt && hintAt > 0 && !this.hintShown && this.hintButton) {
@@ -438,7 +439,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       this,
       pos.x,
       pos.y - 40 * this.layoutScale,
-      `${item?.emoji ?? '🙂'} Nicht das!`,
+      'Nicht das!',
       '#666688',
       22 * this.layoutScale,
     );
@@ -479,7 +480,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.reactBuddy('oops');
     detectiveSounds.decoy();
     if (item) {
-      this.showSamuelSpeech(`${item.emoji} Nur ${item.kidLabel}!`);
+      this.showSamuelSpeech(`Nur ${item.kidLabel}!`);
     }
 
     this.animateDrawerClose(view, () => {
@@ -788,7 +789,8 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     const panel = drawScribbleRect(this, px, py, 180 * scale, 290 * scale, DETECTIVE_PAPER, DETECTIVE_MARKER_GREEN, 4);
     panel.setDepth(2);
 
-    addComicText(this, px, py - 118 * scale, '🎒', 28 * scale).setDepth(3);
+    const packTitle = addComicText(this, px, py - 118 * scale, 'Tasche', 22 * scale).setDepth(3);
+    attachTitleMark(this, packTitle, '🎒');
 
     const slotSize = 48 * scale;
     const startY = py - 72 * scale;
@@ -820,18 +822,12 @@ export class DetectiveCabinetScene extends Phaser.Scene {
           ease: 'Back.easeOut',
         });
       } else {
-        const ghost = this.add
-          .text(0, 0, gear.emoji, {
-            fontFamily: 'Fredoka, Comic Sans MS, cursive',
-            fontSize: `${24 * this.layoutScale}px`,
-            color: '#bbbbcc',
-          })
-          .setOrigin(0.5)
-          .setAlpha(0.45);
+        const ghost = drawCabinetItem(this, gear.id, 0.42 * this.layoutScale);
+        ghost.setAlpha(0.28);
         holder.add(ghost);
       }
     });
-    this.progressText?.setText(`⭐ ${this.collected.size} von ${this.caseGear.length}`);
+    this.progressText?.setText(`Gefunden: ${this.collected.size} von ${this.caseGear.length}`);
   }
 
   private createBackpackRow(cx: number, cy: number, scale: number): void {

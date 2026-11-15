@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { COLORS } from './constants';
+import { drawSamuelSideView } from './samuelCharacter';
 
 export const DETECTIVE_MARKER_GREEN = 0x3d7a54;
 export const DETECTIVE_MARKER_GREY = 0x8a8a8a;
@@ -30,23 +32,6 @@ export function drawScribbleRect(
   return g;
 }
 
-function drawSamuelSketch(scene: Phaser.Scene, y: number, scale: number): Phaser.GameObjects.Container {
-  const c = scene.add.container(0, y);
-  const s = scale;
-  const head = scene.add.circle(0, -34 * s, 22 * s, DETECTIVE_MARKER_GREEN, 0.15);
-  head.setStrokeStyle(3 * s, DETECTIVE_MARKER_GREEN);
-  const hair = scene.add.ellipse(0, -48 * s, 40 * s, 18 * s, DETECTIVE_MARKER_GREY, 0.35);
-  hair.setStrokeStyle(2 * s, DETECTIVE_MARKER_GREEN);
-  const body = scene.add.rectangle(0, 4 * s, 34 * s, 40 * s, DETECTIVE_MARKER_GREY, 0.35);
-  body.setStrokeStyle(3 * s, DETECTIVE_MARKER_GREEN);
-  const legL = scene.add.rectangle(-10 * s, 38 * s, 12 * s, 28 * s, DETECTIVE_MARKER_GREEN, 0.2);
-  legL.setStrokeStyle(2 * s, DETECTIVE_MARKER_GREEN);
-  const legR = scene.add.rectangle(10 * s, 38 * s, 12 * s, 28 * s, DETECTIVE_MARKER_GREEN, 0.2);
-  legR.setStrokeStyle(2 * s, DETECTIVE_MARKER_GREEN);
-  c.add([legL, legR, body, hair, head]);
-  return c;
-}
-
 export function createDetectiveSamuel(
   scene: Phaser.Scene,
   x: number,
@@ -70,11 +55,19 @@ export function createDetectiveSamuel(
   root.add(nameTag);
 
   if (scene.textures.exists('detective-samuel')) {
-    const portrait = scene.add.image(0, 18 * scale, 'detective-samuel');
-    portrait.setDisplaySize(112 * scale, 162 * scale);
-    root.add(portrait);
+    const portrait = scene.add.image(0, 14 * scale, 'detective-samuel');
+    portrait.setDisplaySize(104 * scale, 128 * scale);
+    const frame = scene.add.graphics();
+    frame.lineStyle(4 * scale, COLORS.outline);
+    frame.strokeRoundedRect(-54 * scale, -52 * scale, 108 * scale, 134 * scale, 12);
+    frame.fillStyle(0xffd93d, 1);
+    frame.fillCircle(0, -58 * scale, 7 * scale);
+    frame.lineStyle(2 * scale, COLORS.outline);
+    frame.strokeCircle(0, -58 * scale, 7 * scale);
+    root.add([portrait, frame]);
   } else {
-    root.add(drawSamuelSketch(scene, 18 * scale, scale));
+    const bust = drawSamuelSideView(scene, 0, 28 * scale, scale * 0.85);
+    root.add(bust);
   }
 
   const clipFrame = scene.add.rectangle(0, 18 * scale, 122 * scale, 136 * scale);

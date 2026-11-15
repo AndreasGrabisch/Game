@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import type { DetectiveGearId, DecoyId } from '../data/detectiveItems';
-import { DETECTIVE_MARKER_GREEN, DETECTIVE_MARKER_GREY, DETECTIVE_PAPER } from './detectiveSamuel';
+import { DETECTIVE_MARKER_GREEN, DETECTIVE_PAPER } from './detectiveSamuel';
 
 export interface DrawerParts {
   cavity: Phaser.GameObjects.Container;
@@ -11,32 +11,48 @@ export interface DrawerParts {
 
 export function createDrawerParts(scene: Phaser.Scene, width: number, height: number): DrawerParts {
   const cavity = scene.add.container(0, 0);
-  const innerShade = scene.add.rectangle(0, 4, width - 8, height - 8, 0x2a2018, 0.25);
   const inner = scene.add.graphics();
-  inner.fillStyle(DETECTIVE_PAPER, 1);
-  inner.lineStyle(2, DETECTIVE_MARKER_GREEN, 0.6);
-  inner.fillRoundedRect(-(width - 10) / 2, -(height - 10) / 2, width - 10, height - 10, 6);
-  inner.strokeRoundedRect(-(width - 10) / 2, -(height - 10) / 2, width - 10, height - 10, 6);
-  cavity.add([innerShade, inner]);
+  inner.fillStyle(0x6a4a32, 1);
+  inner.fillRoundedRect(-width / 2 + 4, -height / 2 + 6, width - 8, height - 8, 6);
+  inner.fillStyle(0xe7d3a8, 1);
+  inner.fillRoundedRect(-width / 2 + 10, -height / 2 + 12, width - 20, height - 22, 4);
+  inner.lineStyle(2, DETECTIVE_MARKER_GREEN, 0.45);
+  inner.strokeRoundedRect(-width / 2 + 10, -height / 2 + 12, width - 20, height - 22, 4);
+  inner.lineStyle(1.5, 0x8aa0c8, 0.35);
+  inner.lineBetween(-width / 2 + 18, -4, width / 2 - 18, -4);
+  inner.lineBetween(-width / 2 + 18, 6, width / 2 - 22, 6);
+  cavity.add(inner);
 
   const front = scene.add.container(0, 0);
-  const shadow = scene.add.rectangle(3, 4, width, height, 0x000000, 0.12);
+  const shadow = scene.add.rectangle(4, 6, width, height, 0x000000, 0.14);
   const bodyGfx = scene.add.graphics();
-  bodyGfx.fillStyle(0xdeb887, 1);
+  bodyGfx.fillStyle(0xd7a86e, 1);
   bodyGfx.lineStyle(4, 0x6b4f2a);
   bodyGfx.fillRoundedRect(-width / 2, -height / 2, width, height, 8);
   bodyGfx.strokeRoundedRect(-width / 2, -height / 2, width, height, 8);
+  bodyGfx.fillStyle(0xf0c48a, 0.85);
+  bodyGfx.fillRoundedRect(-width / 2 + 4, -height / 2 + 4, width - 8, height * 0.22, 6);
+  bodyGfx.fillStyle(0xb8834a, 0.55);
+  bodyGfx.fillRoundedRect(-width / 2 + 4, height / 2 - height * 0.18, width - 8, height * 0.12, 4);
   const grain = scene.add.graphics();
-  grain.lineStyle(1, 0x8b6914, 0.25);
-  for (let y = -height / 2 + 8; y < height / 2 - 8; y += 10) {
-    grain.lineBetween(-width / 2 + 6, y, width / 2 - 6, y + 2);
+  grain.lineStyle(1, 0x8b6914, 0.22);
+  for (let y = -height / 2 + 10; y < height / 2 - 10; y += 12) {
+    grain.lineBetween(-width / 2 + 8, y, width / 2 - 8, y + 2);
   }
-  const plaque = scene.add.rectangle(0, -height * 0.18, width - 20, height * 0.22, DETECTIVE_MARKER_GREY, 0.22);
-  plaque.setStrokeStyle(2, DETECTIVE_MARKER_GREEN, 0.35);
-  const knob = scene.add.circle(0, height * 0.28, 10, 0xd4d4d4);
-  knob.setStrokeStyle(3, COLORS.outline);
-  const knobShine = scene.add.circle(-3, height * 0.28 - 3, 3, COLORS.white, 0.7);
-  front.add([shadow, bodyGfx, grain, plaque, knob, knobShine]);
+  const plaque = scene.add.rectangle(0, -height * 0.22, width - 24, height * 0.18, DETECTIVE_PAPER, 0.9);
+  plaque.setStrokeStyle(2, DETECTIVE_MARKER_GREEN, 0.4);
+  const handle = scene.add.graphics();
+  const hy = height * 0.22;
+  handle.fillStyle(0xe6c36a, 1);
+  handle.lineStyle(3, COLORS.outline);
+  handle.fillRoundedRect(-width * 0.22, hy - 6, width * 0.44, 12, 6);
+  handle.strokeRoundedRect(-width * 0.22, hy - 6, width * 0.44, 12, 6);
+  handle.fillStyle(0xffffff, 0.55);
+  handle.fillRoundedRect(-width * 0.12, hy - 4, width * 0.16, 3, 2);
+  handle.fillStyle(0x8b6914, 1);
+  handle.fillCircle(-width * 0.28, hy, 3);
+  handle.fillCircle(width * 0.28, hy, 3);
+  front.add([shadow, bodyGfx, grain, plaque, handle]);
 
   return { cavity, front, openOffsetY: height * 0.42 };
 }
@@ -48,6 +64,8 @@ export function drawCabinetItem(
 ): Phaser.GameObjects.Container {
   const c = scene.add.container(0, 0);
   const s = scale;
+  const shadow = scene.add.ellipse(2 * s, 22 * s, 30 * s, 8 * s, 0x000000, 0.16);
+  c.add(shadow);
 
   switch (itemId) {
     case 'magnifier': {

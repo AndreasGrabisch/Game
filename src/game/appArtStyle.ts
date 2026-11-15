@@ -40,6 +40,8 @@ export function drawIllustratedPanel(
   panel.lineStyle(ART.outline, COLORS.outline);
   panel.fillRoundedRect(-width / 2, -height / 2, width, height, ART.cornerRadius);
   panel.strokeRoundedRect(-width / 2, -height / 2, width, height, ART.cornerRadius);
+  panel.lineStyle(2, 0xffffff, 0.45);
+  panel.strokeRoundedRect(-width / 2 + 6, -height / 2 + 6, width - 12, height - 12, 8);
   const shine = scene.add.graphics();
   shine.fillStyle(0xffffff, 0.22);
   shine.fillRoundedRect(-width / 2 + 8, -height / 2 + 8, width - 16, height * 0.22, 8);

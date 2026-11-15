@@ -83,6 +83,8 @@ export function drawComicPanel(
   panel.lineStyle(4, COLORS.outline);
   panel.fillRoundedRect(-width / 2, -height / 2, width, height, 12);
   panel.strokeRoundedRect(-width / 2, -height / 2, width, height, 12);
+  panel.lineStyle(2, 0xffffff, 0.4);
+  panel.strokeRoundedRect(-width / 2 + 6, -height / 2 + 6, width - 12, height - 12, 8);
   const gloss = scene.add.rectangle(0, -height / 2 + 10, width - 14, height * 0.18, COLORS.white, 0.2);
   container.add([shadow, panel, gloss]);
   return container;

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
+import { feedbackSounds } from './feedbackAudio';
 
 export interface BikeDrawOptions {
   showWheels?: boolean;
@@ -265,7 +266,11 @@ export function createComicButton(
 
   bg.on('pointerover', () => bg.setFillStyle(color, 0.85));
   bg.on('pointerout', () => bg.setFillStyle(color, 1));
-  bg.on('pointerdown', onClick);
+  bg.on('pointerdown', () => {
+    void feedbackSounds.unlock();
+    feedbackSounds.tap();
+    onClick();
+  });
 
   container.add([bg, text]);
   return container;

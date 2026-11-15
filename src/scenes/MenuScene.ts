@@ -3,6 +3,10 @@ import { COLORS } from '../game/constants';
 import { drawSamuel, drawBike, addComicText, createComicButton } from '../game/graphics';
 import { getGameCenter } from './BootScene';
 import { resetProgress } from '../game/Progress';
+import { resetDetectiveProgress } from '../game/detectiveProgress';
+import { drawPlaygroundSky } from '../game/appHomeGraphics';
+import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 export class MenuScene extends Phaser.Scene {
   constructor() {
@@ -10,61 +14,41 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.drawBackground();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
+    runSceneFadeIn(this);
+
+    drawPlaygroundSky(this);
     const { x, y, scale } = getGameCenter(this);
 
-    addComicText(this, x, y - 160 * scale, 'Samuel baut\nsein Fahrrad', 42 * scale);
+    addComicText(this, x, y - 150 * scale, 'Neu starten?', 38 * scale);
+    addComicText(this, x, y - 108 * scale, 'Fortschritt wird gelöscht', 18 * scale);
 
-    const samuel = drawSamuel(this, x - 80 * scale, y + 40 * scale, 1.2 * scale);
-    const bike = drawBike(this, x + 100 * scale, y + 60 * scale, 1.0 * scale, {
-      showFrame: true,
-      showWheels: false,
-    });
-
+    const samuel = drawSamuel(this, x - 90 * scale, y + 20 * scale, 1.05 * scale);
+    const bike = drawBike(this, x + 90 * scale, y + 40 * scale, 0.95 * scale, { showFrame: true, showWheels: false });
     this.tweens.add({
       targets: [samuel, bike],
-      y: `+=${8 * scale}`,
-      duration: 1200,
+      y: `+=${6 * scale}`,
+      duration: 1100,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
 
-    createComicButton(this, x, y + 170 * scale, 'Spielen!', () => {
-      this.scene.start('WorkshopScene');
-    });
+    createComicButton(this, x, y + 130 * scale, 'Zurück', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, 180);
 
     createComicButton(
       this,
       x,
-      y + 240 * scale,
-      'Neu starten',
+      y + 200 * scale,
+      'Alles löschen',
       () => {
         resetProgress();
-        this.scene.restart();
+        resetDetectiveProgress();
+        void showSpeechIf(this, 'Alles ist wieder wie am ersten Tag.');
+        transitionToScene(this, 'HubScene');
       },
-      0x5b6ee1,
+      COLORS.error,
+      200,
     );
-
-    createComicButton(
-      this,
-      x,
-      y + 310 * scale,
-      'Alle Spiele',
-      () => this.scene.start('HubScene'),
-      0x888899,
-    );
-  }
-
-  private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, COLORS.sky);
-    this.add.rectangle(width / 2, height * 0.82, width, height * 0.36, COLORS.grass);
-
-    for (let i = 0; i < 6; i++) {
-      const cx = (width / 7) * (i + 1);
-      const cloud = this.add.ellipse(cx, 60 + (i % 3) * 30, 90, 40, COLORS.white, 0.9);
-      cloud.setStrokeStyle(2, COLORS.outline, 0.2);
-    }
   }
 }

@@ -8,6 +8,7 @@ import {
   drawStar,
 } from '../game/graphics';
 import { getGameCenter } from './BootScene';
+import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import {
   isMissionAvailable,
   isPartUnlocked,
@@ -28,6 +29,7 @@ export class WorkshopScene extends Phaser.Scene {
   }
 
   create(): void {
+    runSceneFadeIn(this);
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     const progress = loadProgress();
@@ -66,8 +68,8 @@ export class WorkshopScene extends Phaser.Scene {
       this,
       x - 200 * scale,
       y + 220 * scale,
-      'Titel',
-      () => this.scene.start('MenuScene'),
+      'Zuhause',
+      () => transitionToScene(this, 'HubScene'),
       0x5b6ee1,
     );
 

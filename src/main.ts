@@ -12,6 +12,8 @@ import { DetectiveWallScene } from './scenes/DetectiveWallScene';
 import { Mission01Wheels } from './scenes/missions/Mission01Wheels';
 import { Mission02Pedals } from './scenes/missions/Mission02Pedals';
 import { Mission03Handlebar } from './scenes/missions/Mission03Handlebar';
+import { Mission04Bell } from './scenes/missions/Mission04Bell';
+import { ComingSoonScene } from './scenes/ComingSoonScene';
 import { RideScene } from './scenes/RideScene';
 import { ColorSortScene } from './scenes/ColorSortScene';
 
@@ -38,6 +40,8 @@ const config: Phaser.Types.Core.GameConfig = {
     Mission01Wheels,
     Mission02Pedals,
     Mission03Handlebar,
+    Mission04Bell,
+    ComingSoonScene,
     RideScene,
     ColorSortScene,
   ],

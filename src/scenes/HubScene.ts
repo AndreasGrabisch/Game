@@ -1,15 +1,12 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants';
-import { drawSamuel, addComicText, createComicButton, drawComicPanel, drawStar } from '../game/graphics';
+import { drawSamuel, addComicText, createComicButton } from '../game/graphics';
 import { getGameCenter } from './BootScene';
 import { APP_HOME_MODES, type AppHomeMode } from '../data/appModes';
-import {
-  getAppTotalStars,
-  getBikeBuildProgressLabel,
-  getBikeMissionStars,
-  getDetectiveStarsTotal,
-} from '../game/appProgress';
+import { getAppTotalStars } from '../game/appProgress';
 import { drawHomeTitleBadge, drawModeIcon, drawPlaygroundSky } from '../game/appHomeGraphics';
+import { drawHubProgressBoard } from '../game/hubProgressDisplay';
+import { getHubWorldTier } from '../game/hubWorldProgress';
 import { drawLockIcon } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { getMuteButtonLabel, toggleGameAudio } from '../game/audioUi';
@@ -28,7 +25,7 @@ export class HubScene extends Phaser.Scene {
     runSceneFadeIn(this);
     bindSceneMusic(this, 'home');
 
-    drawPlaygroundSky(this);
+    drawPlaygroundSky(this, getHubWorldTier());
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);
     const s = scale * (layout.portrait ? 0.82 : 1);
@@ -37,7 +34,7 @@ export class HubScene extends Phaser.Scene {
     addComicText(this, x, y - (layout.portrait ? 252 : 228) * s, 'Samuels Spielewelt', 36 * s);
     addComicText(this, x, y - (layout.portrait ? 216 : 194) * s, 'Wähle dein Abenteuer!', 18 * s);
 
-    this.drawProgressTeaser(x, y - (layout.portrait ? 178 : 152) * s, s, layout.portrait);
+    drawHubProgressBoard(this, x, y - (layout.portrait ? 188 : 162) * s, s, layout.portrait, getAppTotalStars());
 
     const samuel = drawSamuel(this, x - (layout.portrait ? 150 : 320) * s, y + (layout.portrait ? 200 : 120) * s, 0.9 * s);
     samuel.setDepth(2);
@@ -53,12 +50,12 @@ export class HubScene extends Phaser.Scene {
     const modes = APP_HOME_MODES;
     if (layout.portrait) {
       const cardW = Math.min(168 * s, (this.scale.width - 36) / 2);
-      const cardH = 156 * s;
+      const cardH = 140 * s;
       const gapX = 12 * s;
       const gapY = 14 * s;
       const gridW = cardW * 2 + gapX;
       const startX = x - gridW / 2 + cardW / 2;
-      const startY = y - 62 * s;
+      const startY = y - 48 * s;
       modes.forEach((mode, index) => {
         const col = index % 2;
         const row = Math.floor(index / 2);
@@ -94,38 +91,9 @@ export class HubScene extends Phaser.Scene {
 
     this.time.delayedCall(500, () => {
       if (this.scene.isActive()) {
-        void showSpeechIf(this, 'Hallo! Tippe auf ein Spiel. Oben siehst du deine Sterne.');
+        void showSpeechIf(this, 'Hallo! Oben siehst du Fahrrad- und Detektiv-Fortschritt. Die Bonus-Welt leuchtet nach der Klingel!');
       }
     });
-  }
-
-  private drawProgressTeaser(x: number, y: number, scale: number, portrait: boolean): void {
-    const total = getAppTotalStars();
-    const bike = getBikeMissionStars();
-    const det = getDetectiveStarsTotal();
-    const w = portrait ? Math.min(340 * scale, this.scale.width - 24) : 560 * scale;
-    const panel = drawComicPanel(this, x, y, w, portrait ? 70 * scale : 62 * scale);
-    panel.setDepth(1);
-
-    const starText = addComicText(this, x - w / 2 + 58 * scale, y - 6 * scale, `⭐ ${total}`, 24 * scale);
-    starText.setOrigin(0.5);
-
-    this.add
-      .text(x, y - 2 * scale, `Fahrrad ${bike} · Detektiv ${det} · ${getBikeBuildProgressLabel()}`, {
-        fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${portrait ? 14 : 16}px`,
-        color: '#1a1a2e',
-        fontStyle: 'bold',
-        align: 'center',
-        wordWrap: { width: w - 120 },
-      })
-      .setOrigin(0.5);
-
-    if (total > 0) {
-      const g = drawStar(this, x - w / 2 + 24 * scale, y - 6 * scale, 16 * scale, true);
-      this.tweens.add({ targets: g, angle: 18, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      this.tweens.add({ targets: starText, scale: 1.08, duration: 400, yoyo: true, repeat: 2, ease: 'Sine.easeInOut' });
-    }
   }
 
   private async readHomeAloud(): Promise<void> {

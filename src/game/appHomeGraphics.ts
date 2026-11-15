@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import type { AppModeIcon } from '../data/appModes';
+import type { HubWorldTier } from './hubWorldProgress';
 
-export function drawPlaygroundSky(scene: Phaser.Scene): Phaser.GameObjects.Graphics {
+export function drawPlaygroundSky(scene: Phaser.Scene, worldTier: HubWorldTier = 0): Phaser.GameObjects.Graphics {
   const { width, height } = scene.scale;
   const gfx = scene.add.graphics().setDepth(0);
   gfx.fillStyle(COLORS.sky, 1);
@@ -24,6 +25,43 @@ export function drawPlaygroundSky(scene: Phaser.Scene): Phaser.GameObjects.Graph
   const rug = scene.add.rectangle(width / 2, height * 0.88, width * 0.72, 36, COLORS.panel, 0.85);
   rug.setStrokeStyle(3, COLORS.outline, 0.2);
   rug.setDepth(0);
+
+  if (worldTier >= 1) {
+    for (let i = 0; i < 3 + worldTier; i++) {
+      const flag = scene.add.triangle(
+        80 + i * (width / (4 + worldTier)),
+        height * 0.76,
+        0,
+        0,
+        14,
+        22,
+        0,
+        44,
+        [COLORS.bikeFrame, COLORS.success, 0x5b6ee1][i % 3],
+      );
+      flag.setStrokeStyle(2, COLORS.outline, 0.2);
+      flag.setDepth(0);
+    }
+  }
+
+  if (worldTier >= 2) {
+    const arc = scene.add.graphics().setDepth(0);
+    arc.lineStyle(4, COLORS.star, 0.65);
+    arc.strokeCircle(width / 2, height * 0.88, width * 0.28);
+  }
+
+  if (worldTier >= 3) {
+    const colors = [0xff6b6b, 0xffd93d, 0x6bcb77, 0x5b6ee1];
+    for (let i = 0; i < 8; i++) {
+      const bx = width * 0.12 + ((i * 97) % (width * 0.76));
+      const balloon = scene.add.circle(bx, height * 0.2 + (i % 3) * 28, 16, colors[i % colors.length], 0.85);
+      balloon.setStrokeStyle(2, COLORS.outline, 0.25);
+      const string = scene.add.rectangle(bx, height * 0.2 + (i % 3) * 28 + 22, 2, 32, COLORS.outline, 0.35);
+      balloon.setDepth(0);
+      string.setDepth(0);
+    }
+  }
+
   void gfx;
   return gfx;
 }
@@ -55,6 +93,12 @@ export function drawModeIcon(scene: Phaser.Scene, icon: AppModeIcon, scale = 1):
       bucket.setStrokeStyle(2 * s, COLORS.outline);
       root.add(bucket);
     });
+  } else if (icon === 'soon') {
+    const ball = scene.add.circle(0, 4 * s, 20 * s, COLORS.white);
+    ball.setStrokeStyle(3 * s, COLORS.outline);
+    root.add(ball);
+    const patch = scene.add.circle(-6 * s, 0, 7 * s, 0x333333, 0.4);
+    root.add(patch);
   } else if (icon === 'ride') {
     const path = scene.add.graphics();
     path.lineStyle(5 * s, COLORS.success, 0.8);

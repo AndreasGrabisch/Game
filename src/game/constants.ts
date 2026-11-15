@@ -18,11 +18,12 @@ export const COLORS = {
 export const GAME_WIDTH = 960;
 export const GAME_HEIGHT = 540;
 
-export const VEHICLE_PARTS = ['wheels', 'pedals', 'handlebar'] as const;
+export const VEHICLE_PARTS = ['wheels', 'pedals', 'handlebar', 'bell'] as const;
 export type VehiclePart = (typeof VEHICLE_PARTS)[number];
 
 export const PART_LABELS: Record<VehiclePart, string> = {
   wheels: 'Räder',
   pedals: 'Pedale & Kette',
   handlebar: 'Lenker',
+  bell: 'Klingel',
 };

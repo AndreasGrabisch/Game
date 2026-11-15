@@ -12,6 +12,9 @@ import {
 import { drawHomeTitleBadge, drawModeIcon, drawPlaygroundSky } from '../game/appHomeGraphics';
 import { drawLockIcon } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
+import { getMuteButtonLabel, toggleGameAudio } from '../game/audioUi';
+import { feedbackSounds } from '../game/feedbackAudio';
+import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
@@ -23,6 +26,7 @@ export class HubScene extends Phaser.Scene {
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
     runSceneFadeIn(this);
+    bindSceneMusic(this, 'home');
 
     drawPlaygroundSky(this);
     const { x, y, scale } = getGameCenter(this);
@@ -72,10 +76,21 @@ export class HubScene extends Phaser.Scene {
     }
 
     const btnY = y + (layout.portrait ? 248 : 228) * s;
-    createComicButton(this, x - 100 * s, btnY, '🔊 Vorlesen', () => void this.readHomeAloud(), 0xff6b35, 120);
+    const muteBtn = createComicButton(this, x - 155 * s, btnY, getMuteButtonLabel(), () => {
+      toggleGameAudio();
+      const label = muteBtn.list[1] as Phaser.GameObjects.Text;
+      label.setText(getMuteButtonLabel());
+    }, 0x6bcb77, 100);
+    void muteBtn;
+    createComicButton(this, x - 35 * s, btnY, '🔊 Vorlesen', () => void this.readHomeAloud(), 0xff6b35, 110);
     createComicButton(this, x + 110 * s, btnY, 'Neu starten', () => {
       transitionToScene(this, 'MenuScene');
-    }, 0x888899, 130);
+    }, 0x888899, 120);
+
+    this.input.once('pointerdown', () => {
+      void feedbackSounds.unlock();
+      feedbackSounds.hubWelcome();
+    });
 
     this.time.delayedCall(500, () => {
       if (this.scene.isActive()) {

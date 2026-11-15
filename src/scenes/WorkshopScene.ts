@@ -10,6 +10,8 @@ import {
 import { getGameCenter } from './BootScene';
 import { attachIdleBounce } from '../game/characterCompanion';
 import { drawLockIcon, drawWorkshopBackdrop } from '../game/sceneBackgrounds';
+import { feedbackSounds } from '../game/feedbackAudio';
+import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import {
   isMissionAvailable,
@@ -32,6 +34,7 @@ export class WorkshopScene extends Phaser.Scene {
 
   create(): void {
     runSceneFadeIn(this);
+    bindSceneMusic(this, 'workshop');
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     const progress = loadProgress();
@@ -52,6 +55,7 @@ export class WorkshopScene extends Phaser.Scene {
       isPartUnlocked('wheels') && isPartUnlocked('pedals') && isPartUnlocked('handlebar');
 
     if (bikeReady) {
+      feedbackSounds.workshopCheer();
       this.tweens.add({
         targets: bike,
         x: x + 30 * scale,

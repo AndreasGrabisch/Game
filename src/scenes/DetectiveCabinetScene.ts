@@ -28,6 +28,7 @@ import { detectiveSounds } from '../game/detectiveAudio';
 import { publicAssetUrl } from '../game/assetPath';
 import { tryEnableGameDisplay } from '../game/display';
 import { DETECTIVE_TIMING } from '../game/detectiveTiming';
+import { bindSceneMusic } from '../game/sceneMusic';
 
 interface DrawerModel {
   uid: number;
@@ -108,6 +109,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.hintButton = undefined;
     this.buddy = undefined;
 
+    bindSceneMusic(this, 'detective');
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);

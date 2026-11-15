@@ -15,6 +15,7 @@ import {
   setDetectiveHubTutorialSeen,
 } from '../game/detectiveProgress';
 import { DETECTIVE_MARKER_GREEN } from '../game/detectiveSamuel';
+import { bindSceneMusic } from '../game/sceneMusic';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 export class DetectiveHubScene extends Phaser.Scene {
@@ -24,6 +25,7 @@ export class DetectiveHubScene extends Phaser.Scene {
 
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
+    bindSceneMusic(this, 'detective');
 
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);

@@ -5,6 +5,8 @@ import { getGameCenter } from './BootScene';
 import { resetProgress } from '../game/Progress';
 import { resetDetectiveProgress } from '../game/detectiveProgress';
 import { drawPlaygroundSky } from '../game/appHomeGraphics';
+import { getMuteButtonLabel, toggleGameAudio } from '../game/audioUi';
+import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
@@ -16,6 +18,7 @@ export class MenuScene extends Phaser.Scene {
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
     runSceneFadeIn(this);
+    bindSceneMusic(this, 'home');
 
     drawPlaygroundSky(this);
     const { x, y, scale } = getGameCenter(this);
@@ -34,7 +37,13 @@ export class MenuScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    createComicButton(this, x, y + 130 * scale, 'Zurück', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, 180);
+    const muteBtn = createComicButton(this, x - 150 * scale, y + 130 * scale, getMuteButtonLabel(), () => {
+      toggleGameAudio();
+      const label = muteBtn.list[1] as Phaser.GameObjects.Text;
+      label.setText(getMuteButtonLabel());
+    }, 0x6bcb77, 120);
+    void muteBtn;
+    createComicButton(this, x + 110 * scale, y + 130 * scale, 'Zurück', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, 150);
 
     createComicButton(
       this,

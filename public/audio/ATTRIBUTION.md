@@ -1,5 +1,10 @@
 # Audio-Quellen
 
-Diese Runde nutzt **keine** externen Sound-Dateien. UI- und Spieltöne werden per **WebAudio** im Code erzeugt (`feedbackAudio.ts`, `detectiveAudio.ts`).
+Alle Klänge in dieser App-Runde werden **prozedural per WebAudio** erzeugt:
 
-Externe CC0-Assets werden erst in einer späteren App-Runde ergänzt; dann stehen Quelle und Lizenz hier.
+- `audioEngine.ts` — gemeinsamer Kontext & Lautstärke
+- `appMusic.ts` — leise Hintergrund-Melodie pro Szene
+- `feedbackAudio.ts` — UI, Werkstatt, Fahrt, Farben
+- `detectiveAudio.ts` — Detektiv-SFX
+
+**Keine** externen CC0-Dateien in Runde C. Wenn später Dateien ergänzt werden, stehen Quelle und Lizenz hier.

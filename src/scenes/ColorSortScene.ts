@@ -7,6 +7,7 @@ import { getGameCenter } from './BootScene';
 import { spawnSamuelCompanion } from '../game/characterCompanion';
 import { drawColorSortBackdrop } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
+import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
@@ -93,6 +94,7 @@ export class ColorSortScene extends Phaser.Scene {
     this.finished = false;
 
     runSceneFadeIn(this);
+    bindSceneMusic(this, 'colors');
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);
@@ -330,7 +332,7 @@ export class ColorSortScene extends Phaser.Scene {
     if (this.selected === item) this.selected = null;
     (item.container.getData('ring') as Phaser.GameObjects.Arc).setVisible(false);
     item.container.setScale(1);
-    feedbackSounds.place();
+    feedbackSounds.colorPop();
 
     bucket.count += 1;
     bucket.countText.setText(String(bucket.count));

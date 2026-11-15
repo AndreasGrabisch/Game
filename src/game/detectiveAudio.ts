@@ -1,21 +1,9 @@
+import { getAudioContext, getMasterGain, sfxVolume, unlockAudio } from './audioEngine';
+
 type Wave = OscillatorType;
 
-let audioCtx: AudioContext | null = null;
-
-function getContext(): AudioContext | null {
-  if (typeof window === 'undefined') return null;
-  const Ctx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctx) return null;
-  if (!audioCtx) audioCtx = new Ctx();
-  return audioCtx;
-}
-
 export async function unlockDetectiveAudio(): Promise<void> {
-  const ctx = getContext();
-  if (!ctx) return;
-  if (ctx.state === 'suspended') {
-    await ctx.resume();
-  }
+  await unlockAudio();
 }
 
 function playTone(
@@ -25,25 +13,29 @@ function playTone(
   volume = 0.08,
   when = 0,
 ): void {
-  const ctx = getContext();
-  if (!ctx) return;
+  const ctx = getAudioContext();
+  const master = getMasterGain();
+  const vol = sfxVolume(volume);
+  if (!ctx || !master || vol <= 0) return;
 
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(frequency, ctx.currentTime + when);
   gain.gain.setValueAtTime(0.0001, ctx.currentTime + when);
-  gain.gain.exponentialRampToValueAtTime(volume, ctx.currentTime + when + 0.02);
+  gain.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + when + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + when + duration);
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(master);
   osc.start(ctx.currentTime + when);
   osc.stop(ctx.currentTime + when + duration + 0.05);
 }
 
 function playNoise(duration: number, volume = 0.05): void {
-  const ctx = getContext();
-  if (!ctx) return;
+  const ctx = getAudioContext();
+  const master = getMasterGain();
+  const vol = sfxVolume(volume);
+  if (!ctx || !master || vol <= 0) return;
 
   const bufferSize = Math.floor(ctx.sampleRate * duration);
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -59,10 +51,10 @@ function playNoise(duration: number, volume = 0.05): void {
   filter.frequency.value = 700;
 
   source.buffer = buffer;
-  gain.gain.value = volume;
+  gain.gain.value = vol;
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(master);
   source.start();
 }
 

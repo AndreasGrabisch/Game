@@ -6,6 +6,7 @@ import { DETECTIVE_CASES } from '../data/detectiveCases';
 import { APP_MILESTONES } from './appMilestones';
 import {
   getBallGameWinCount,
+  getBallSuperRoundCount,
   getColorSortBestStars,
   getRideCompletionCount,
   loadAppTreasury,
@@ -85,6 +86,16 @@ export function buildTreasuryStickers(): TreasurySticker[] {
       id: 'ball-champion',
       emoji: '⚽',
       label: `Ball · ${getBallGameWinCount()}× gefangen`,
+      source: 'ball',
+      unlocked: true,
+    });
+  }
+
+  if (getBallSuperRoundCount() > 0) {
+    items.push({
+      id: 'ball-super-round',
+      emoji: '✨',
+      label: `Super-Runde · ${getBallSuperRoundCount()}×`,
       source: 'ball',
       unlocked: true,
     });

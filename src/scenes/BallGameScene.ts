@@ -4,26 +4,33 @@ import { addComicText, createComicButton, floatFeedback } from '../game/graphics
 import { reactCompanionCheer, reactCompanionOops, spawnSamuelCompanion } from '../game/characterCompanion';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { drawComingSoonParkBackdrop } from '../game/sceneBackgrounds';
-import { drawSoccerBall } from '../game/objectGraphics';
+import { drawSoccerBall, drawSparkleSoccerBall } from '../game/objectGraphics';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { playConfettiBurst } from '../game/celebrationConfetti';
 import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { getGameCenter } from './BootScene';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
-import { recordBallGameWin } from '../game/appTreasury';
+import { recordBallGameWin, recordBallSuperRound } from '../game/appTreasury';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
-const GOAL_CATCHES = 10;
+const MAIN_GOAL = 10;
+const BONUS_GOAL = 5;
 const ROUND_SECONDS = 60;
+const SPARKLE_CHANCE = 0.22;
 
 interface FallingBall {
   container: Phaser.GameObjects.Container;
   speed: number;
+  sparkle: boolean;
 }
 
 export class BallGameScene extends Phaser.Scene {
   private balls: FallingBall[] = [];
-  private caught = 0;
+  private points = 0;
+  private bonusPoints = 0;
+  private superActive = false;
+  private superAnnounced = false;
+  private streak = 0;
   private timeLeft = ROUND_SECONDS;
   private playing = false;
   private finished = false;
@@ -33,6 +40,7 @@ export class BallGameScene extends Phaser.Scene {
   private clockTimer?: Phaser.Time.TimerEvent;
   private counterText?: Phaser.GameObjects.Text;
   private timerText?: Phaser.GameObjects.Text;
+  private streakText?: Phaser.GameObjects.Text;
   private samuelCompanion?: Phaser.GameObjects.Container;
   private playBounds = { left: 0, right: 0 };
 
@@ -42,7 +50,11 @@ export class BallGameScene extends Phaser.Scene {
 
   create(): void {
     this.balls = [];
-    this.caught = 0;
+    this.points = 0;
+    this.bonusPoints = 0;
+    this.superActive = false;
+    this.superAnnounced = false;
+    this.streak = 0;
     this.timeLeft = ROUND_SECONDS;
     this.playing = false;
     this.finished = false;
@@ -65,15 +77,15 @@ export class BallGameScene extends Phaser.Scene {
       this,
       x,
       y - (layout.portrait ? 212 : 192) * this.layoutScale,
-      'Tippe die Bälle — fang 10 oder spiel 60 Sekunden!',
-      17 * this.layoutScale,
+      '10 Punkte = Super-Runde! Glitzer-Bälle zählen doppelt.',
+      16 * this.layoutScale,
     );
 
     this.counterText = addComicText(
       this,
       x,
       y - (layout.portrait ? 176 : 158) * this.layoutScale,
-      `Gefangen: 0 / ${GOAL_CATCHES}`,
+      `Punkte: 0 / ${MAIN_GOAL}`,
       22 * this.layoutScale,
     );
     this.timerText = addComicText(
@@ -83,6 +95,14 @@ export class BallGameScene extends Phaser.Scene {
       `Zeit: ${ROUND_SECONDS}`,
       20 * this.layoutScale,
     );
+    this.streakText = addComicText(
+      this,
+      x,
+      y - (layout.portrait ? 116 : 98) * this.layoutScale,
+      '',
+      18 * this.layoutScale,
+    );
+    this.streakText.setAlpha(0);
 
     const basket = this.add.graphics();
     basket.fillStyle(COLORS.success, 0.25);
@@ -144,11 +164,42 @@ export class BallGameScene extends Phaser.Scene {
     }
   }
 
+  private elapsedSeconds(): number {
+    return ROUND_SECONDS - this.timeLeft;
+  }
+
+  private spawnDelayMs(): number {
+    return Math.max(520, 920 - this.elapsedSeconds() * 7);
+  }
+
+  private ballSpeed(): number {
+    const ramp = this.elapsedSeconds() * 2.2 + this.points * 0.35;
+    return Phaser.Math.Between(110 + Math.floor(ramp), 155 + Math.floor(ramp * 1.2)) * this.layoutScale;
+  }
+
+  private refreshCounter(): void {
+    if (this.superActive) {
+      this.counterText?.setText(`Super-Runde! Bonus: ${this.bonusPoints} / ${BONUS_GOAL}`);
+    } else {
+      this.counterText?.setText(`Punkte: ${this.points} / ${MAIN_GOAL}`);
+    }
+  }
+
+  private rescheduleSpawn(): void {
+    if (!this.playing || this.finished) return;
+    this.spawnTimer?.remove(false);
+    this.spawnTimer = this.time.addEvent({
+      delay: this.spawnDelayMs(),
+      loop: true,
+      callback: () => this.spawnBall(),
+    });
+  }
+
   private async begin(): Promise<void> {
-  if (!(await showSpeechIf(this, 'Tippe die Bälle, bevor sie unten sind!'))) return;
+    if (!(await showSpeechIf(this, 'Tippe die Bälle, bevor sie unten sind — jeder Versuch zählt!'))) return;
     this.playing = true;
     this.spawnTimer = this.time.addEvent({
-      delay: 900,
+      delay: this.spawnDelayMs(),
       loop: true,
       callback: () => this.spawnBall(),
     });
@@ -164,6 +215,9 @@ export class BallGameScene extends Phaser.Scene {
     if (this.finished || !this.playing) return;
     this.timeLeft -= 1;
     this.timerText?.setText(`Zeit: ${Math.max(0, this.timeLeft)}`);
+    if (this.timeLeft > 0 && this.timeLeft % 12 === 0) {
+      this.rescheduleSpawn();
+    }
     if (this.timeLeft <= 0) {
       void this.finishRound();
     }
@@ -177,10 +231,11 @@ export class BallGameScene extends Phaser.Scene {
       Math.floor(this.playBounds.right - radius),
     );
     const startY = getGameCenter(this).y - 120 * this.layoutScale;
+    const sparkle = Math.random() < SPARKLE_CHANCE;
 
     const container = this.add.container(px, startY);
     container.setDepth(4);
-    const visual = drawSoccerBall(this, radius);
+    const visual = sparkle ? drawSparkleSoccerBall(this, radius) : drawSoccerBall(this, radius);
     container.add(visual);
     const hit = this.add.circle(0, 0, radius * 1.1, 0xffffff, 0.001);
     hit.setInteractive({ useHandCursor: true });
@@ -188,29 +243,78 @@ export class BallGameScene extends Phaser.Scene {
 
     const entry: FallingBall = {
       container,
-      speed: Phaser.Math.Between(110, 155) * this.layoutScale,
+      speed: this.ballSpeed(),
+      sparkle,
     };
     this.balls.push(entry);
 
     hit.on('pointerdown', () => this.catchBall(entry));
 
-    this.tweens.add({
-      targets: container,
-      angle: Phaser.Math.Between(-6, 6),
-      duration: 400,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    if (sparkle) {
+      this.tweens.add({
+        targets: container,
+        scale: { from: 1, to: 1.08 },
+        duration: 350,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    } else {
+      this.tweens.add({
+        targets: container,
+        angle: Phaser.Math.Between(-6, 6),
+        duration: 400,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+  }
+
+  private async maybeStartSuperRound(): Promise<void> {
+    if (this.superAnnounced || this.points < MAIN_GOAL) return;
+    this.superAnnounced = true;
+    this.superActive = true;
+    this.bonusPoints = 0;
+    this.refreshCounter();
+    const { x, y } = getGameCenter(this);
+    feedbackSounds.crowdCheer();
+    playConfettiBurst(this, x, y - 60 * this.layoutScale, this.layoutScale, { count: 14, emojis: ['⚽', '✨', '🎉'] });
+    reactCompanionCheer(this, this.samuelCompanion);
+    await showSpeechIf(this, 'Super-Runde! Fang noch 5 Bonus-Bälle für einen Extra-Sticker!');
+    this.rescheduleSpawn();
   }
 
   private catchBall(entry: FallingBall): void {
     if (this.finished || !this.playing) return;
     this.balls = this.balls.filter((b) => b !== entry);
-    feedbackSounds.catch();
+    const value = entry.sparkle ? 2 : 1;
+    if (entry.sparkle) feedbackSounds.colorPop();
+    else feedbackSounds.catch();
+
     reactCompanionCheer(this, this.samuelCompanion);
-    this.caught += 1;
-    this.counterText?.setText(`Gefangen: ${this.caught} / ${GOAL_CATCHES}`);
+    this.streak += 1;
+    this.showStreakFeedback(entry.container.x, entry.container.y, entry.sparkle);
+
+    if (this.superActive) {
+      this.bonusPoints += value;
+      if (this.bonusPoints >= BONUS_GOAL && this.bonusPoints - value < BONUS_GOAL) {
+        recordBallSuperRound();
+        feedbackSounds.crowdCheer();
+        floatFeedback(
+          this,
+          entry.container.x,
+          entry.container.y - 40 * this.layoutScale,
+          'Bonus-Sticker!',
+          '#ffd93d',
+          22 * this.layoutScale,
+        );
+      }
+    } else {
+      this.points += value;
+      void this.maybeStartSuperRound();
+    }
+    this.refreshCounter();
 
     this.tweens.add({
       targets: entry.container,
@@ -221,16 +325,46 @@ export class BallGameScene extends Phaser.Scene {
       onComplete: () => entry.container.destroy(),
     });
 
-    floatFeedback(this, entry.container.x, entry.container.y - 24 * this.layoutScale, 'Super!', '#6bcb77', 20 * this.layoutScale);
+    const label = entry.sparkle ? '✨ Doppelt!' : this.streak >= 5 ? 'Mega!' : 'Super!';
+    floatFeedback(this, entry.container.x, entry.container.y - 24 * this.layoutScale, label, '#6bcb77', 20 * this.layoutScale);
+  }
 
-    if (this.caught >= GOAL_CATCHES) {
-      void this.finishRound();
+  private showStreakFeedback(x: number, y: number, sparkle: boolean): void {
+    if (this.streak === 3 || this.streak === 5 || (this.streak > 5 && this.streak % 3 === 0)) {
+      feedbackSounds.crowdCheer();
+      const msg = this.streak >= 5 ? `${this.streak} in Folge! 🔥` : `${this.streak}er-Serie!`;
+      floatFeedback(this, x, y - 56 * this.layoutScale, msg, sparkle ? '#ffd93d' : '#5b6ee1', 24 * this.layoutScale);
+      this.streakText?.setText(msg);
+      this.streakText?.setAlpha(1);
+      this.tweens.add({
+        targets: this.streakText,
+        alpha: 0,
+        duration: 1200,
+        delay: 400,
+      });
+      if (this.samuelCompanion) {
+        this.tweens.add({
+          targets: this.samuelCompanion,
+          scaleX: this.samuelCompanion.scaleX * 1.12,
+          scaleY: this.samuelCompanion.scaleY * 1.12,
+          duration: 160,
+          yoyo: true,
+          ease: 'Back.easeOut',
+        });
+      }
+      const { x: cx, y: cy } = getGameCenter(this);
+      playConfettiBurst(this, cx, cy - 80 * this.layoutScale, this.layoutScale * 0.85, {
+        count: this.streak >= 5 ? 12 : 8,
+        emojis: ['⭐', '⚽'],
+      });
     }
   }
 
   private onMiss(entry: FallingBall): void {
     this.balls = this.balls.filter((b) => b !== entry);
     entry.container.destroy();
+    this.streak = 0;
+    this.streakText?.setAlpha(0);
     reactCompanionOops(this, this.samuelCompanion);
     floatFeedback(
       this,
@@ -257,15 +391,27 @@ export class BallGameScene extends Phaser.Scene {
 
     const { x, y } = getGameCenter(this);
     const { firstWin } = recordBallGameWin();
+    const gotBonus = this.bonusPoints >= BONUS_GOAL;
     feedbackSounds.success();
+    if (gotBonus) feedbackSounds.crowdCheer();
     reactCompanionCheer(this, this.samuelCompanion);
-    playConfettiBurst(this, x, y - 40 * this.layoutScale, this.layoutScale, { count: 16, emojis: ['⚽', '⭐', '🎉'] });
+    playConfettiBurst(this, x, y - 40 * this.layoutScale, this.layoutScale, { count: 18, emojis: ['⚽', '⭐', '🎉', '✨'] });
 
-    const praise =
-      this.caught >= GOAL_CATCHES
-        ? `Wow, ${this.caught} Bälle! Du bist ein Ball-Star!`
-        : `Toll! ${this.caught} Bälle gefangen — du hast mitgemacht!`;
-    const stickerLine = firstWin ? ' Neuer Sticker in der Schatzkiste!' : '';
+    let praise: string;
+    if (this.superActive && gotBonus) {
+      praise = `Fantastisch! Super-Runde mit ${this.bonusPoints} Bonus-Punkten — du bist ein Ball-Star!`;
+    } else if (this.superActive) {
+      praise = `Super-Runde geschafft! ${this.bonusPoints} Bonus-Punkte — toll mitgemacht!`;
+    } else if (this.points >= MAIN_GOAL) {
+      praise = `Wow, ${this.points} Punkte! Du bist ein Ball-Star!`;
+    } else {
+      praise = `Toll! ${this.points} Punkte gefangen — du hast super mitgespielt!`;
+    }
+
+    const stickers: string[] = [];
+    if (firstWin) stickers.push('Neuer Ball-Sticker in der Schatzkiste!');
+    if (gotBonus) stickers.push('Bonus-Sticker freigeschaltet!');
+    const stickerLine = stickers.length ? ` ${stickers.join(' ')}` : '';
 
     if (!(await showSpeechIf(this, praise + stickerLine))) return;
 

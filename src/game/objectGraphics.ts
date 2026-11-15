@@ -176,3 +176,18 @@ export function drawSoccerBall(scene: Phaser.Scene, radius: number): Phaser.Game
   ball.add([base, patch, shine]);
   return ball;
 }
+
+export function drawSparkleSoccerBall(scene: Phaser.Scene, radius: number): Phaser.GameObjects.Container {
+  const ball = drawSoccerBall(scene, radius);
+  const glow = scene.add.circle(0, 0, radius * 1.15, 0xfff4a3, 0.35);
+  ball.addAt(glow, 0);
+  const spark = scene.add.graphics();
+  spark.lineStyle(Math.max(2, radius * 0.1), 0xffd93d, 0.9);
+  const r = radius * 1.35;
+  for (let i = 0; i < 4; i++) {
+    const a = (Math.PI / 2) * i + Math.PI / 4;
+    spark.lineBetween(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5, Math.cos(a) * r, Math.sin(a) * r);
+  }
+  ball.add(spark);
+  return ball;
+}

@@ -117,4 +117,12 @@ export const feedbackSounds = {
     playTone(698, 0.07, 'triangle', 0.05);
     playTone(880, 0.09, 'triangle', 0.045, 0.08);
   },
+
+  crowdCheer(): void {
+    playTone(392, 0.12, 'triangle', 0.045);
+    playTone(494, 0.12, 'triangle', 0.045, 0.08);
+    playTone(587, 0.14, 'triangle', 0.05, 0.16);
+    playTone(784, 0.2, 'triangle', 0.055, 0.28);
+    playNoise(0.22, 0.035);
+  },
 };

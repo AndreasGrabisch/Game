@@ -51,12 +51,19 @@ export function drawCabinetItem(
 
   switch (itemId) {
     case 'magnifier': {
-      const lens = scene.add.circle(0, -8 * s, 18 * s, 0xa8d8ff, 0.6);
-      lens.setStrokeStyle(3 * s, COLORS.outline);
-      const handle = scene.add.rectangle(12 * s, 8 * s, 8 * s, 28 * s, 0x5c3d2e);
-      handle.setStrokeStyle(2 * s, COLORS.outline);
-      handle.setAngle(35);
-      c.add([handle, lens]);
+      const handle = scene.add.graphics();
+      handle.fillStyle(0x5c3d2e, 1);
+      handle.lineStyle(2.5 * s, COLORS.outline);
+      handle.fillRoundedRect(6 * s, 4 * s, 8 * s, 30 * s, 3);
+      handle.strokeRoundedRect(6 * s, 4 * s, 8 * s, 30 * s, 3);
+      handle.setAngle(32);
+      const ring = scene.add.graphics();
+      ring.lineStyle(4 * s, COLORS.outline);
+      ring.strokeCircle(-2 * s, -10 * s, 16 * s);
+      ring.fillStyle(0xa8d8ff, 0.55);
+      ring.fillCircle(-2 * s, -10 * s, 14 * s);
+      const shine = scene.add.ellipse(-10 * s, -16 * s, 10 * s, 6 * s, COLORS.white, 0.55);
+      c.add([handle, ring, shine]);
       break;
     }
     case 'tape': {

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../../game/constants';
 import { addComicText, createComicButton, drawStar, floatFeedback } from '../../game/graphics';
+import { drawBikeLaneAvatar, drawHandlebarPartIcon } from '../../game/bikeGraphics';
 import { feedbackSounds } from '../../game/feedbackAudio';
 import { starsForMistakes } from '../../game/scoring';
 import { getGameCenter } from '../BootScene';
@@ -166,31 +167,11 @@ export class Mission03Handlebar extends Phaser.Scene {
   }
 
   private createRider(scale: number): void {
-    this.bike = this.add.container(this.laneCenter(0), this.catchY);
+    const avatar = drawBikeLaneAvatar(this, scale);
+    this.bike = avatar.root;
+    this.frontWheel = avatar.frontWheel;
+    this.bike.setPosition(this.laneCenter(0), this.catchY);
     this.bike.setDepth(5);
-
-    const shadow = this.add.ellipse(0, 20 * scale, 56 * scale, 16 * scale, 0x000000, 0.15);
-    const rear = this.add.ellipse(0, 16 * scale, 18 * scale, 30 * scale, COLORS.wheel);
-    rear.setStrokeStyle(2 * scale, COLORS.outline);
-    const frame = this.add.rectangle(0, -2 * scale, 14 * scale, 34 * scale, COLORS.bikeFrame);
-    frame.setStrokeStyle(2 * scale, COLORS.outline);
-
-    this.frontWheel = this.add.container(0, -26 * scale);
-    const tire = this.add.ellipse(0, 0, 16 * scale, 28 * scale, COLORS.wheel);
-    tire.setStrokeStyle(2 * scale, COLORS.outline);
-    const spoke = this.add.rectangle(0, 0, 3 * scale, 20 * scale, COLORS.wheelRim);
-    const bars = this.add.rectangle(0, -14 * scale, 28 * scale, 5 * scale, COLORS.bikeFrame);
-    bars.setStrokeStyle(2 * scale, COLORS.outline);
-    this.frontWheel.add([tire, spoke, bars]);
-
-    const head = this.add.circle(0, -6 * scale, 11 * scale, COLORS.samuelSkin);
-    head.setStrokeStyle(2 * scale, COLORS.outline);
-    const hair = this.add.ellipse(0, -14 * scale, 18 * scale, 9 * scale, 0x5c3d2e);
-    hair.setStrokeStyle(2 * scale, COLORS.outline);
-    const eyeL = this.add.circle(-4 * scale, -7 * scale, 1.6 * scale, COLORS.outline);
-    const eyeR = this.add.circle(4 * scale, -7 * scale, 1.6 * scale, COLORS.outline);
-
-    this.bike.add([shadow, rear, frame, this.frontWheel, hair, head, eyeL, eyeR]);
   }
 
   private createControls(barX: number, barY: number, buttonY: number, scale: number): void {
@@ -211,14 +192,8 @@ export class Mission03Handlebar extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const barGraphic = this.add.container(0, 14 * scale);
-    const gripL = this.add.rectangle(-78 * scale, 0, 18 * scale, 28 * scale, 0x333333);
-    gripL.setStrokeStyle(2 * scale, COLORS.outline);
-    const gripR = this.add.rectangle(78 * scale, 0, 18 * scale, 28 * scale, 0x333333);
-    gripR.setStrokeStyle(2 * scale, COLORS.outline);
-    const bar = this.add.rectangle(0, 0, 150 * scale, 8 * scale, COLORS.bikeFrame);
-    bar.setStrokeStyle(2 * scale, COLORS.outline);
-    barGraphic.add([bar, gripL, gripR]);
+    const barGraphic = drawHandlebarPartIcon(this, scale * 1.15);
+    barGraphic.setPosition(0, 10 * scale);
 
     const nudgeL = this.add
       .text(-118 * scale, 14 * scale, '←', {

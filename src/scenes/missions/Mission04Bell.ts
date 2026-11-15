@@ -11,9 +11,9 @@ import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../gam
 import { drawMissionYardBackdrop } from '../../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 import { getDetectiveLayoutMode } from '../../game/detectiveLayout';
+import { drawBellChoiceIcon, drawDecoyIcon, randomDecoyKind } from '../../game/objectGraphics';
 
 const GOAL = 3;
-const DECOYS = ['🧦', '🍌', '🦆', '🧁'];
 
 export class Mission04Bell extends Phaser.Scene {
   private missionData = MISSIONS['mission-04-bell'];
@@ -37,7 +37,7 @@ export class Mission04Bell extends Phaser.Scene {
     const layout = getDetectiveLayoutMode(this);
     const s = scale * (layout.portrait ? 0.92 : 1);
 
-    addComicText(this, x, y - (layout.portrait ? 220 : 236) * s, '🔔 Klingel-Tanz', 28 * s);
+    addComicText(this, x, y - (layout.portrait ? 220 : 236) * s, 'Klingel-Tanz', 28 * s);
     this.counterText = addComicText(this, x, y - (layout.portrait ? 186 : 200) * s, `Klingeln: 0 / ${GOAL}`, 22 * s);
 
     drawBike(this, x, y + (layout.portrait ? 48 : 32) * s, 1.2 * s, {
@@ -114,10 +114,8 @@ export class Mission04Bell extends Phaser.Scene {
     const color = isBell ? COLORS.star : COLORS.panel;
     const bg = this.add.circle(0, 0, radius, color, isBell ? 1 : 0.95);
     bg.setStrokeStyle(4, isBell ? COLORS.bikeFrame : COLORS.outline);
-    const label = this.add.text(0, 0, isBell ? '🔔' : Phaser.Utils.Array.GetRandom(DECOYS), {
-      fontSize: `${isBell ? 42 : 36}px`,
-    }).setOrigin(0.5);
-    root.add([bg, label]);
+    const icon = isBell ? drawBellChoiceIcon(this, scale) : drawDecoyIcon(this, randomDecoyKind(), scale);
+    root.add([bg, icon]);
 
     bg.setInteractive({ useHandCursor: true });
     bg.on('pointerdown', () => {

@@ -7,6 +7,12 @@ import {
   createComicButton,
   drawStar,
 } from '../../game/graphics';
+import {
+  drawChainPartIcon,
+  drawPedalPartIcon,
+  drawWheelPartIcon,
+} from '../../game/bikeGraphics';
+import { drawIllustratedPanel } from '../../game/appArtStyle';
 import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
@@ -92,8 +98,8 @@ export class Mission02Pedals extends Phaser.Scene {
       const sx = cx + (i - 1) * 100 * scale;
       const container = this.add.container(sx, cy);
 
-      const box = this.add.rectangle(0, 0, 80 * scale, 80 * scale, COLORS.white);
-      box.setStrokeStyle(3, COLORS.outline);
+      const panel = drawIllustratedPanel(this, 0, 0, 84 * scale, 84 * scale, COLORS.white);
+      panel.setScale(1);
 
       const num = this.add
         .text(0, -28 * scale, labels[i], {
@@ -112,7 +118,7 @@ export class Mission02Pedals extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      container.add([box, num, placeholder]);
+      container.add([panel, num, placeholder]);
       this.slotIndicators.push(container);
     }
   }
@@ -157,22 +163,11 @@ export class Mission02Pedals extends Phaser.Scene {
     const icon = this.add.container(0, 0);
 
     if (part === 'pedal') {
-      const crank = this.add.circle(0, 0, 10 * scale, COLORS.wheel);
-      crank.setStrokeStyle(2, COLORS.outline);
-      const pedal = this.add.rectangle(16 * scale, 0, 18 * scale, 8 * scale, COLORS.wheelRim);
-      pedal.setStrokeStyle(2, COLORS.outline);
-      icon.add([crank, pedal]);
+      icon.add(drawPedalPartIcon(this, scale));
     } else if (part === 'chain') {
-      const g = this.add.graphics();
-      g.lineStyle(3 * scale, COLORS.outline);
-      for (let i = 0; i < 5; i++) {
-        g.strokeCircle(-24 * scale + i * 12 * scale, 0, 5 * scale);
-      }
-      icon.add(g);
+      icon.add(drawChainPartIcon(this, scale));
     } else {
-      const tire = this.add.circle(0, 0, 16 * scale, COLORS.wheel);
-      tire.setStrokeStyle(2, COLORS.outline);
-      icon.add(tire);
+      icon.add(drawWheelPartIcon(this, scale));
     }
 
     return icon;
@@ -255,14 +250,14 @@ export class Mission02Pedals extends Phaser.Scene {
     const bg = container.getData('bg') as Phaser.GameObjects.Rectangle;
     bg.disableInteractive();
 
-    const mini = this.add
-      .text(slotX, slotY, PART_LABELS[part], {
-        fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${14 * scale}px`,
-        color: '#1a1a2e',
-        fontStyle: 'bold',
-      })
-      .setOrigin(0.5);
+    const mini = this.add.container(slotX, slotY);
+    const miniIcon =
+      part === 'pedal'
+        ? drawPedalPartIcon(this, scale * 0.85)
+        : part === 'chain'
+          ? drawChainPartIcon(this, scale * 0.85)
+          : drawWheelPartIcon(this, scale * 0.85);
+    mini.add(miniIcon);
 
     const sparkle = this.add.star(slotX, slotY - 20 * scale, 4, 4 * scale, 8 * scale, COLORS.star);
     this.tweens.add({

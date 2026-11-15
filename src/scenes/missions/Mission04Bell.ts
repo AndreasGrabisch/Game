@@ -8,6 +8,7 @@ import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
 import { playConfettiBurst } from '../../game/celebrationConfetti';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../game/sceneTransition';
+import { drawMissionYardBackdrop } from '../../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 import { getDetectiveLayoutMode } from '../../game/detectiveLayout';
 
@@ -177,8 +178,6 @@ export class Mission04Bell extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, COLORS.sky);
-    this.add.rectangle(width / 2, height * 0.82, width, height * 0.36, COLORS.grass);
+    drawMissionYardBackdrop(this);
   }
 }

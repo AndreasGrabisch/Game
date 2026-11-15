@@ -11,6 +11,7 @@ import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../game/sceneTransition';
+import { drawMissionYardBackdrop } from '../../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 
 type PartId = 'pedal' | 'chain' | 'wheel';
@@ -318,8 +319,6 @@ export class Mission02Pedals extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, COLORS.sky);
-    this.add.rectangle(width / 2, height * 0.8, width, height * 0.4, COLORS.grass);
+    drawMissionYardBackdrop(this);
   }
 }

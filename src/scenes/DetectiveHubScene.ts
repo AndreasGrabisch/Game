@@ -17,6 +17,7 @@ import {
 import { DETECTIVE_MARKER_GREEN } from '../game/detectiveSamuel';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { readSceneEnterStyle, runSceneEnter, transitionToHub, transitionToScene } from '../game/sceneTransition';
+import { drawDetectiveHubBackdrop } from '../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 export class DetectiveHubScene extends Phaser.Scene {
@@ -324,8 +325,6 @@ export class DetectiveHubScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, 0xf7f5ef);
-    this.add.rectangle(width / 2, height * 0.92, width, height * 0.16, 0xe8dcc8);
+    drawDetectiveHubBackdrop(this);
   }
 }

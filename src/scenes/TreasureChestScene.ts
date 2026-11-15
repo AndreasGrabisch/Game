@@ -3,7 +3,7 @@ import { COLORS } from '../game/constants';
 import { addComicText, createComicButton, drawComicPanel, floatFeedback } from '../game/graphics';
 import { reactCompanionCheer, spawnSamuelCompanion } from '../game/characterCompanion';
 import { feedbackSounds } from '../game/feedbackAudio';
-import { drawPlaygroundSky } from '../game/appHomeGraphics';
+import { drawTreasureChestBackdrop } from '../game/sceneBackgrounds';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { getGameCenter } from './BootScene';
@@ -19,7 +19,7 @@ export class TreasureChestScene extends Phaser.Scene {
   create(): void {
     runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'home');
-    drawPlaygroundSky(this, 2);
+    drawTreasureChestBackdrop(this);
 
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);

@@ -31,6 +31,7 @@ import { DETECTIVE_TIMING } from '../game/detectiveTiming';
 import { playConfettiBurst } from '../game/celebrationConfetti';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
 import { bindSceneMusic } from '../game/sceneMusic';
+import { drawDetectiveCabinetBackdrop } from '../game/sceneBackgrounds';
 
 interface DrawerModel {
   uid: number;
@@ -969,8 +970,8 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
+    drawDetectiveCabinetBackdrop(this);
     const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, DETECTIVE_PAPER);
     const desk = this.add.rectangle(width / 2, height * 0.9, width, height * 0.2, 0xe8dcc8);
     desk.setStrokeStyle(3, DETECTIVE_MARKER_GREEN, 0.35);
 

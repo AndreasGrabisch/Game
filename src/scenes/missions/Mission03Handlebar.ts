@@ -8,6 +8,7 @@ import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
 import { playConfettiBurst } from '../../game/celebrationConfetti';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../game/sceneTransition';
+import { drawMissionYardBackdrop } from '../../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 
 type Lane = -1 | 0 | 1;
@@ -134,9 +135,7 @@ export class Mission03Handlebar extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, COLORS.sky);
-    this.add.rectangle(width / 2, height * 0.78, width, height * 0.44, COLORS.grass);
+    drawMissionYardBackdrop(this);
   }
 
   private createRoad(centerX: number, top: number, bottom: number, scale: number): void {

@@ -5,6 +5,7 @@ import { getGameCenter } from './BootScene';
 import { APP_HOME_MODES, type AppHomeMode } from '../data/appModes';
 import { getAppRewardSummary, getAppTotalStars } from '../game/appProgress';
 import { runHubMilestoneCelebrations } from '../game/hubMilestoneCelebration';
+import { drawHeaderRibbon, drawIllustratedPanel } from '../game/appArtStyle';
 import { drawHomeTitleBadge, drawModeIcon, drawPlaygroundSky } from '../game/appHomeGraphics';
 import { drawHubProgressBoard } from '../game/hubProgressDisplay';
 import { getHubWorldTier } from '../game/hubWorldProgress';
@@ -141,16 +142,20 @@ export class HubScene extends Phaser.Scene {
   ): void {
     const unlocked = mode.isUnlocked();
     const container = this.add.container(x, y);
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.panel);
-    bg.setStrokeStyle(4, unlocked ? mode.accentColor : COLORS.outline);
-    bg.setAlpha(unlocked ? 1 : 0.82);
-
-    const header = this.add.rectangle(0, -height / 2 + 24 * scale, width - 8 * scale, 46 * scale, mode.accentColor, unlocked ? 1 : 0.45);
-    header.setStrokeStyle(2, COLORS.outline);
+    drawIllustratedPanel(this, x, y, width, height, unlocked ? COLORS.panel : 0xeeeeee, 2).setAlpha(unlocked ? 1 : 0.88);
+    drawHeaderRibbon(
+      this,
+      x,
+      y - height / 2 + 26 * scale,
+      width - 10 * scale,
+      48 * scale,
+      unlocked ? mode.accentColor : 0xbbbbcc,
+      3,
+    ).setAlpha(unlocked ? 1 : 0.55);
 
     const icon = drawModeIcon(this, mode.icon, 0.55 * scale);
     icon.setPosition(0, -height / 2 + 26 * scale);
-    container.add([bg, header, icon]);
+    container.add(icon);
 
     const title = this.add
       .text(0, -height / 2 + 62 * scale, mode.title, {

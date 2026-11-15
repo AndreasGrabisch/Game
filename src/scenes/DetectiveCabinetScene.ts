@@ -875,6 +875,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     });
 
     const gear = getItemById(pick.itemId);
+    reactBuddyMood(this, this.buddy, 'peek');
     void showSpeechIf(this, `Hier glitzert etwas! ${gear?.emoji ?? '🔍'} Vielleicht ist deine ${gear?.kidLabel ?? 'Sache'} hier.`);
   }
 

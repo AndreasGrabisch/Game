@@ -27,30 +27,42 @@ body {
 #rotate-hint {
   display: none;
   position: fixed;
-  inset: 0;
-  z-index: 200;
-  background: #f7f5ef;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(247, 245, 239, 0.92);
   color: #1a1a2e;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 10px;
   text-align: center;
-  padding: 24px;
+  padding: 10px 16px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  pointer-events: none;
+  border-bottom: 3px solid #3d7a54;
+  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.08);
 }
 
 #rotate-hint.visible {
   display: flex;
 }
 
+body.portrait-play #game-container {
+  padding-top: 52px;
+}
+
 #rotate-hint p {
-  font-size: clamp(22px, 5vw, 32px);
+  font-size: clamp(14px, 3.6vw, 18px);
   font-weight: 700;
+  max-width: 92vw;
 }
 
 #rotate-hint span {
-  font-size: 64px;
+  font-size: 28px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 #game-container canvas {

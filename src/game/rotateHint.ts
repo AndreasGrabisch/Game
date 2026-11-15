@@ -6,6 +6,7 @@ export function setupRotateHint(): void {
     const portrait = window.matchMedia('(orientation: portrait)').matches;
     const narrow = window.innerWidth < 900;
     hint.classList.toggle('visible', portrait && narrow);
+    document.body.classList.toggle('portrait-play', portrait && narrow);
   };
 
   update();

@@ -5,7 +5,7 @@ import { reactCompanionCheer, spawnSamuelCompanion } from '../game/characterComp
 import { feedbackSounds } from '../game/feedbackAudio';
 import { drawPlaygroundSky } from '../game/appHomeGraphics';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { getGameCenter } from './BootScene';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 
@@ -15,7 +15,7 @@ export class ComingSoonScene extends Phaser.Scene {
   }
 
   create(): void {
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'home');
     drawPlaygroundSky(this);
 
@@ -49,6 +49,6 @@ export class ComingSoonScene extends Phaser.Scene {
 
     addComicText(this, x, y + (layout.portrait ? 120 : 100) * s, 'Samuel freut sich schon mit!', 18 * s);
 
-    createComicButton(this, x, y + (layout.portrait ? 200 : 180) * s, 'Zurück', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, 150);
+    createComicButton(this, x, y + (layout.portrait ? 200 : 180) * s, 'Zurück', () => transitionToHub(this), 0x5b6ee1, 150);
   }
 }

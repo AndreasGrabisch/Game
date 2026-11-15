@@ -28,6 +28,8 @@ import { detectiveSounds } from '../game/detectiveAudio';
 import { publicAssetUrl } from '../game/assetPath';
 import { tryEnableGameDisplay } from '../game/display';
 import { DETECTIVE_TIMING } from '../game/detectiveTiming';
+import { playConfettiBurst } from '../game/celebrationConfetti';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
 import { bindSceneMusic } from '../game/sceneMusic';
 
 interface DrawerModel {
@@ -96,6 +98,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   create(): void {
+    runSceneEnter(this, readSceneEnterStyle(this));
     this.drawers = [];
     this.drawerViews = [];
     this.collected = new Set();
@@ -910,32 +913,10 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       x + (this.portraitMode ? 150 : 170) * scale,
       y,
       'Fälle',
-      () => this.scene.start('DetectiveHubScene'),
+      () => transitionToScene(this, 'DetectiveHubScene', undefined, { label: 'Fälle' }),
       0x5b6ee1,
       this.portraitMode ? 92 : 100,
     );
-  }
-
-  private playCelebrationParticles(cx: number, cy: number, scale: number): void {
-    const emojis = ['⭐', '✨', this.caseDef.stickerReward, this.caseDef.badgeEmoji, '🎉'];
-    for (let i = 0; i < 14; i++) {
-      const p = this.add
-        .text(cx + Phaser.Math.Between(-120, 120) * scale, cy - 40 * scale, emojis[i % emojis.length], {
-          fontSize: `${22 * scale}px`,
-        })
-        .setOrigin(0.5)
-        .setDepth(55);
-      this.tweens.add({
-        targets: p,
-        y: cy + Phaser.Math.Between(-80, 120) * scale,
-        x: p.x + Phaser.Math.Between(-60, 60) * scale,
-        alpha: 0,
-        angle: Phaser.Math.Between(-40, 40),
-        duration: 900 + i * 40,
-        ease: 'Cubic.easeOut',
-        onComplete: () => p.destroy(),
-      });
-    }
   }
 
   private showWin(): void {
@@ -949,7 +930,10 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.trackDaily('finish_case');
     const { x, y, scale } = getGameCenter(this);
     const s = scale * (this.portraitMode ? 0.78 : 1);
-    this.playCelebrationParticles(x, y - 30 * s, s);
+    playConfettiBurst(this, x, y - 30 * s, s, {
+      count: 16,
+      emojis: ['⭐', '✨', this.caseDef.stickerReward, this.caseDef.badgeEmoji, '🎉'],
+    });
     void showSpeechIf(this, `${this.caseDef.winLine} Du hast ${stars} Sterne!`);
     const overlay = this.add.container(0, 0).setDepth(50);
     const dim = this.add.rectangle(x, y, this.scale.width, this.scale.height, 0x000000, 0.45);
@@ -977,7 +961,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       x + 110 * s,
       y + 72 * s,
       'Meine Fälle',
-      () => this.scene.start('DetectiveHubScene'),
+      () => transitionToScene(this, 'DetectiveHubScene', undefined, { label: 'Fälle' }),
       0x5b6ee1,
     );
 

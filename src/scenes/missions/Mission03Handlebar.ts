@@ -6,6 +6,8 @@ import { starsForMistakes } from '../../game/scoring';
 import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
+import { playConfettiBurst } from '../../game/celebrationConfetti';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 
 type Lane = -1 | 0 | 1;
@@ -63,6 +65,7 @@ export class Mission03Handlebar extends Phaser.Scene {
     this.spawnTimer = undefined;
     this.laneRects = [];
 
+    runSceneEnter(this, readSceneEnterStyle(this));
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     this.layoutScale = scale;
@@ -86,7 +89,7 @@ export class Mission03Handlebar extends Phaser.Scene {
       'Zurück',
       () => {
         hideSpeech();
-        this.scene.start('WorkshopScene');
+        transitionToScene(this, 'WorkshopScene', undefined, { label: 'Werkstatt' });
       },
       0x5b6ee1,
       150,
@@ -436,6 +439,7 @@ export class Mission03Handlebar extends Phaser.Scene {
     feedbackSounds.success();
 
     const { x, y, scale } = getGameCenter(this);
+    playConfettiBurst(this, x, y - 100 * scale, scale, { count: 14 });
     this.instructionText?.setText('Geschafft!');
     this.counterText?.setText(earned === 3 ? 'Ohne Fehler!' : `${earned} von 3 Sternen`);
 
@@ -464,7 +468,7 @@ export class Mission03Handlebar extends Phaser.Scene {
     if (!continued) return;
 
     createComicButton(this, x, y + 214 * scale, 'Zur Werkstatt!', () => {
-      this.scene.start('WorkshopScene');
+      transitionToScene(this, 'WorkshopScene', undefined, { label: 'Werkstatt' });
     }).setDepth(15);
   }
 }

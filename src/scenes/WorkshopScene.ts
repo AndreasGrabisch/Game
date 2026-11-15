@@ -14,7 +14,8 @@ import { drawLockIcon, drawWorkshopBackdrop } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { playConfettiBurst } from '../game/celebrationConfetti';
+import { readSceneEnterStyle, runSceneEnter, transitionToHub, transitionToScene } from '../game/sceneTransition';
 import { CORE_BIKE_MISSIONS } from '../game/kidDifficultyCurve';
 import {
   isMissionAvailable,
@@ -47,7 +48,7 @@ export class WorkshopScene extends Phaser.Scene {
   }
 
   create(): void {
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'workshop');
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
@@ -79,6 +80,7 @@ export class WorkshopScene extends Phaser.Scene {
     if (bikeReady) {
       feedbackSounds.workshopCheer();
       reactCompanionCheer(this, this.samuelCompanion);
+      playConfettiBurst(this, x, bikeY - 40 * s, s, { count: 12, emojis: ['⭐', '🚲', '✨', '🎉'] });
       addComicText(this, x, y + (layout.portrait ? 168 : 168) * s, '✅ Fertig!', 26 * s);
     }
 
@@ -91,7 +93,7 @@ export class WorkshopScene extends Phaser.Scene {
     }
 
     const btnY = y + (layout.portrait ? 250 : 220) * s;
-    createComicButton(this, x - (layout.portrait ? 115 : 200) * s, btnY, 'Zuhause', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, layout.portrait ? 120 : 140);
+    createComicButton(this, x - (layout.portrait ? 115 : 200) * s, btnY, 'Zuhause', () => transitionToHub(this), 0x5b6ee1, layout.portrait ? 120 : 140);
 
     const next = getNextMission();
     if (bikeReady) {
@@ -181,16 +183,17 @@ export class WorkshopScene extends Phaser.Scene {
   private startMission(missionId: string): void {
     if (!MISSIONS[missionId]) return;
 
-    if (missionId === 'mission-01-wheels') {
-      this.scene.start('Mission01Wheels');
-    } else if (missionId === 'mission-02-pedals') {
-      this.scene.start('Mission02Pedals');
-    } else if (missionId === 'mission-03-handlebar') {
-      this.scene.start('Mission03Handlebar');
-    } else if (missionId === 'mission-04-bell') {
-      this.scene.start('Mission04Bell');
+    const keyMap: Record<string, string> = {
+      'mission-01-wheels': 'Mission01Wheels',
+      'mission-02-pedals': 'Mission02Pedals',
+      'mission-03-handlebar': 'Mission03Handlebar',
+      'mission-04-bell': 'Mission04Bell',
+    };
+    const target = keyMap[missionId];
+    if (target) {
+      transitionToScene(this, target, undefined, { label: 'Mission!', showOverlay: true });
     } else {
-      this.scene.start('WorkshopScene');
+      transitionToScene(this, 'WorkshopScene', undefined, { showOverlay: false });
     }
   }
 

@@ -8,7 +8,7 @@ import { resetAppTreasury } from '../game/appTreasury';
 import { drawPlaygroundSky } from '../game/appHomeGraphics';
 import { getMuteButtonLabel, toggleGameAudio } from '../game/audioUi';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 export class MenuScene extends Phaser.Scene {
@@ -18,7 +18,7 @@ export class MenuScene extends Phaser.Scene {
 
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'home');
 
     drawPlaygroundSky(this);
@@ -44,7 +44,7 @@ export class MenuScene extends Phaser.Scene {
       label.setText(getMuteButtonLabel());
     }, 0x6bcb77, 120);
     void muteBtn;
-    createComicButton(this, x + 110 * scale, y + 130 * scale, 'Zurück', () => transitionToScene(this, 'HubScene'), 0x5b6ee1, 150);
+    createComicButton(this, x + 110 * scale, y + 130 * scale, 'Zurück', () => transitionToHub(this), 0x5b6ee1, 150);
 
     createComicButton(
       this,
@@ -56,7 +56,7 @@ export class MenuScene extends Phaser.Scene {
         resetDetectiveProgress();
         resetAppTreasury();
         void showSpeechIf(this, 'Alles ist wieder wie am ersten Tag.');
-        transitionToScene(this, 'HubScene');
+        transitionToHub(this);
       },
       COLORS.error,
       200,

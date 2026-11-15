@@ -5,7 +5,7 @@ import { reactCompanionCheer, spawnSamuelCompanion } from '../game/characterComp
 import { feedbackSounds } from '../game/feedbackAudio';
 import { drawPlaygroundSky } from '../game/appHomeGraphics';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { getGameCenter } from './BootScene';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { buildTreasuryStickers } from '../game/appRewardCatalog';
@@ -17,7 +17,7 @@ export class TreasureChestScene extends Phaser.Scene {
   }
 
   create(): void {
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'home');
     drawPlaygroundSky(this, 2);
 
@@ -59,7 +59,7 @@ export class TreasureChestScene extends Phaser.Scene {
       x,
       y + (layout.portrait ? 228 : 210) * s,
       '← Spielplatz',
-      () => transitionToScene(this, 'HubScene'),
+      () => transitionToHub(this),
       0x5b6ee1,
       layout.portrait ? 160 : 180,
     );

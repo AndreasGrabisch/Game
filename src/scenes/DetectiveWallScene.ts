@@ -6,6 +6,7 @@ import { DETECTIVE_CASES } from '../data/detectiveCases';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { MISSION_STICKER_EMOJIS } from '../game/detectiveDailyStickers';
 import { loadDetectiveProgress } from '../game/detectiveProgress';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
 import { showSpeechIf } from '../ui/speech';
 
 export class DetectiveWallScene extends Phaser.Scene {
@@ -14,6 +15,7 @@ export class DetectiveWallScene extends Phaser.Scene {
   }
 
   create(): void {
+    runSceneEnter(this, readSceneEnterStyle(this));
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);
     const s = scale * layout.scaleMul;
@@ -77,6 +79,6 @@ export class DetectiveWallScene extends Phaser.Scene {
       }
     });
 
-    createComicButton(this, x, y + (layout.portrait ? 200 : 188) * s, '← Zurück', () => this.scene.start('DetectiveHubScene'), COLORS.samuelPants, 180);
+    createComicButton(this, x, y + (layout.portrait ? 200 : 188) * s, '← Zurück', () => transitionToScene(this, 'DetectiveHubScene', undefined, { showOverlay: false }), COLORS.samuelPants, 180);
   }
 }

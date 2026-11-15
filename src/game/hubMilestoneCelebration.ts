@@ -2,16 +2,23 @@ import type Phaser from 'phaser';
 import { COLORS } from './constants';
 import { addComicText, createComicButton, drawComicPanel, floatFeedback } from './graphics';
 import { feedbackSounds } from './feedbackAudio';
+import { playConfettiBurst } from './celebrationConfetti';
 import { celebrateMilestone, getMilestoneById, getPendingMilestones, type AppMilestone } from './appMilestones';
 
-export async function runHubMilestoneCelebrations(scene: Phaser.Scene, cx: number, cy: number, scale: number): Promise<void> {
+export async function runHubMilestoneCelebrations(
+  scene: Phaser.Scene,
+  cx: number,
+  cy: number,
+  scale: number,
+): Promise<number> {
   const queue = getPendingMilestones();
-  if (queue.length === 0) return;
+  if (queue.length === 0) return 0;
 
   for (const milestone of queue) {
     await showMilestoneOverlay(scene, cx, cy, scale, milestone);
     celebrateMilestone(milestone.id);
   }
+  return queue.length;
 }
 
 function showMilestoneOverlay(
@@ -44,6 +51,7 @@ function showMilestoneOverlay(
     label.setDepth(depth + 2);
 
     feedbackSounds.workshopCheer();
+    playConfettiBurst(scene, cx, cy - 20 * scale, scale * 0.9, { count: 10 });
     floatFeedback(scene, cx, cy - 110 * scale, meta.cheer, '#ff6b35', 18 * scale);
 
     scene.tweens.add({

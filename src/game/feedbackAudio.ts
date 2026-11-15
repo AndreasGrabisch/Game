@@ -103,4 +103,9 @@ export const feedbackSounds = {
     playTone(659, 0.1, 'triangle', 0.06, 0.1);
     playTone(784, 0.18, 'triangle', 0.06, 0.2);
   },
+
+  tap(): void {
+    playTone(740, 0.05, 'triangle', 0.045);
+    playNoise(0.04, 0.02);
+  },
 };

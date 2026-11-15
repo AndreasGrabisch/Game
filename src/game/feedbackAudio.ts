@@ -1,25 +1,9 @@
+import { getAudioContext, getMasterGain, sfxVolume, unlockAudio } from './audioEngine';
+
 type Wave = OscillatorType;
 
-let audioCtx: AudioContext | null = null;
-
-function getContext(): AudioContext | null {
-  if (typeof window === 'undefined') return null;
-  const Ctx =
-    window.AudioContext ||
-    (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctx) return null;
-  if (!audioCtx) audioCtx = new Ctx();
-  return audioCtx;
-}
-
 export async function unlockFeedbackAudio(): Promise<void> {
-  const ctx = getContext();
-  if (!ctx || ctx.state !== 'suspended') return;
-  try {
-    await ctx.resume();
-  } catch {
-    // Ton startet erst nach einer Nutzer-Geste.
-  }
+  await unlockAudio();
 }
 
 function playTone(
@@ -29,8 +13,10 @@ function playTone(
   volume = 0.06,
   when = 0,
 ): void {
-  const ctx = getContext();
-  if (!ctx) return;
+  const ctx = getAudioContext();
+  const master = getMasterGain();
+  const vol = sfxVolume(volume);
+  if (!ctx || !master || vol <= 0) return;
 
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -38,17 +24,19 @@ function playTone(
   osc.type = type;
   osc.frequency.setValueAtTime(frequency, start);
   gain.gain.setValueAtTime(0.0001, start);
-  gain.gain.exponentialRampToValueAtTime(volume, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(vol, start + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(master);
   osc.start(start);
   osc.stop(start + duration + 0.05);
 }
 
 function playNoise(duration: number, volume = 0.04): void {
-  const ctx = getContext();
-  if (!ctx) return;
+  const ctx = getAudioContext();
+  const master = getMasterGain();
+  const vol = sfxVolume(volume);
+  if (!ctx || !master || vol <= 0) return;
 
   const bufferSize = Math.floor(ctx.sampleRate * duration);
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -63,10 +51,10 @@ function playNoise(duration: number, volume = 0.04): void {
   filter.type = 'lowpass';
   filter.frequency.value = 900;
   source.buffer = buffer;
-  gain.gain.value = volume;
+  gain.gain.value = vol;
   source.connect(filter);
   filter.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(master);
   source.start();
 }
 
@@ -107,5 +95,26 @@ export const feedbackSounds = {
   tap(): void {
     playTone(740, 0.05, 'triangle', 0.045);
     playNoise(0.04, 0.02);
+  },
+
+  hubWelcome(): void {
+    playTone(587, 0.12, 'triangle', 0.05);
+    playTone(784, 0.16, 'triangle', 0.05, 0.1);
+  },
+
+  workshopCheer(): void {
+    playTone(440, 0.08, 'square', 0.04);
+    playTone(554, 0.08, 'square', 0.04, 0.09);
+    playTone(659, 0.14, 'triangle', 0.045, 0.18);
+  },
+
+  rideGo(): void {
+    playTone(330, 0.06, 'sawtooth', 0.03);
+    playTone(440, 0.1, 'sawtooth', 0.035, 0.07);
+  },
+
+  colorPop(): void {
+    playTone(698, 0.07, 'triangle', 0.05);
+    playTone(880, 0.09, 'triangle', 0.045, 0.08);
   },
 };

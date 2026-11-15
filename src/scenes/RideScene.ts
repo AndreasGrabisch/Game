@@ -6,6 +6,7 @@ import { starsForMistakes } from '../game/scoring';
 import { isPartUnlocked } from '../game/Progress';
 import { getGameCenter } from './BootScene';
 import { drawRideBackdrop } from '../game/sceneBackgrounds';
+import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
@@ -60,6 +61,7 @@ export class RideScene extends Phaser.Scene {
     this.markers = [];
 
     runSceneFadeIn(this);
+    bindSceneMusic(this, 'ride');
     const { x, y, scale } = getGameCenter(this);
     this.layoutScale = scale;
     this.bikeScreenX = x - 180 * scale;
@@ -107,6 +109,7 @@ export class RideScene extends Phaser.Scene {
     );
     if (!continued) return;
     void feedbackSounds.unlock();
+    feedbackSounds.rideGo();
     this.riding = true;
   }
 

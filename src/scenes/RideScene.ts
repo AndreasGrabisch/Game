@@ -7,7 +7,9 @@ import { isPartUnlocked } from '../game/Progress';
 import { getGameCenter } from './BootScene';
 import { drawRideBackdrop } from '../game/sceneBackgrounds';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn } from '../game/sceneTransition';
+import { spawnSamuelCompanion, reactCompanionCheer } from '../game/characterCompanion';
+import { getDetectiveLayoutMode } from '../game/detectiveLayout';
+import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 interface Prop {
@@ -41,6 +43,7 @@ export class RideScene extends Phaser.Scene {
   private progressWidth = 420;
   private goalDistance = 3200;
   private spaceKey?: Phaser.Input.Keyboard.Key;
+  private samuelCompanion?: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: 'RideScene' });
@@ -63,18 +66,27 @@ export class RideScene extends Phaser.Scene {
     runSceneFadeIn(this);
     bindSceneMusic(this, 'ride');
     const { x, y, scale } = getGameCenter(this);
-    this.layoutScale = scale;
-    this.bikeScreenX = x - 180 * scale;
-    this.groundY = y + 70 * scale;
-    this.riderBaseY = this.groundY - 28 * scale;
-    this.progressWidth = 460 * scale;
-    this.goalDistance = 3200 * scale;
-    this.speed = 155 * scale;
+    const layout = getDetectiveLayoutMode(this);
+    this.layoutScale = scale * (layout.portrait ? 0.88 : 1);
+    this.bikeScreenX = x - (layout.portrait ? 120 : 180) * this.layoutScale;
+    this.groundY = y + (layout.portrait ? 58 : 70) * this.layoutScale;
+    this.riderBaseY = this.groundY - 28 * this.layoutScale;
+    this.progressWidth = (layout.portrait ? 320 : 460) * this.layoutScale;
+    this.goalDistance = 2200 * this.layoutScale;
+    this.speed = 158 * this.layoutScale;
 
-    this.drawWorld(x, y, scale);
-    this.createRider(scale);
-    this.createMarkers(scale);
-    this.createHud(x, y, scale);
+    this.drawWorld(x, y, this.layoutScale);
+    this.createRider(this.layoutScale);
+    this.createMarkers(this.layoutScale);
+    this.createHud(x, y, this.layoutScale, layout.portrait);
+
+    this.samuelCompanion = spawnSamuelCompanion(
+      this,
+      x + (layout.portrait ? 130 : 280) * this.layoutScale,
+      y - (layout.portrait ? 200 : 160) * this.layoutScale,
+      0.65 * this.layoutScale,
+      9,
+    );
 
     this.spaceKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
@@ -105,7 +117,7 @@ export class RideScene extends Phaser.Scene {
   private async begin(): Promise<void> {
     const continued = await showSpeechIf(
       this,
-      'Mein Fahrrad ist fertig! Tippe auf Spring, wenn eine Pfütze kommt.',
+      'Fertig! Tippe Spring bei Pfützen — kurze Strecke!',
     );
     if (!continued) return;
     void feedbackSounds.unlock();
@@ -167,7 +179,7 @@ export class RideScene extends Phaser.Scene {
   }
 
   private createMarkers(scale: number): void {
-    const puddles = [720, 1280, 1880, 2520];
+    const puddles = [560, 1050, 1550];
     for (const worldX of puddles) {
       this.markers.push({
         worldX: worldX * scale,
@@ -211,9 +223,9 @@ export class RideScene extends Phaser.Scene {
     return banner;
   }
 
-  private createHud(x: number, y: number, scale: number): void {
-    const barX = x + 20 * scale;
-    const barY = y - 230 * scale;
+  private createHud(x: number, y: number, scale: number, portrait: boolean): void {
+    const barX = x - this.progressWidth / 2;
+    const barY = y - (portrait ? 248 : 230) * scale;
     const track = this.add.rectangle(barX, barY, this.progressWidth, 16 * scale, COLORS.white);
     track.setOrigin(0, 0.5);
     track.setStrokeStyle(3, COLORS.outline);
@@ -221,22 +233,31 @@ export class RideScene extends Phaser.Scene {
     this.progressFill.setOrigin(0, 0.5);
     this.progressFill.setStrokeStyle(0, COLORS.outline);
 
-    addComicText(this, x + 40 * scale, y - 196 * scale, 'Spring über die Pfützen!', 20 * scale);
+    addComicText(this, x, barY - 28 * scale, '💧 spring! → 🏁', 20 * scale);
 
     createComicButton(
       this,
-      x - 360 * scale,
-      y - 230 * scale,
-      'Zurück',
+      x - (portrait ? 150 : 360) * scale,
+      barY - (portrait ? 0 : 4) * scale,
+      '←',
       () => {
         hideSpeech();
-        this.scene.start('WorkshopScene');
+        transitionToScene(this, 'WorkshopScene');
       },
       0x5b6ee1,
-      150,
+      portrait ? 72 : 100,
     ).setDepth(10);
 
-    createComicButton(this, x + 300 * scale, y + 200 * scale, 'Spring!', () => this.jump(), COLORS.success, 180).setDepth(10);
+    const jumpY = y + (portrait ? 228 : 200) * scale;
+    createComicButton(
+      this,
+      x,
+      jumpY,
+      '⬆ Spring!',
+      () => this.jump(),
+      COLORS.success,
+      portrait ? 200 : 180,
+    ).setDepth(10);
   }
 
   private scrollProps(dt: number): void {
@@ -315,6 +336,7 @@ export class RideScene extends Phaser.Scene {
     this.finished = true;
     this.riding = false;
     feedbackSounds.success();
+    reactCompanionCheer(this, this.samuelCompanion);
 
     const { x, y, scale } = getGameCenter(this);
     const earned = starsForMistakes(this.hits);

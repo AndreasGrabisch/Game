@@ -19,6 +19,7 @@ import { bindSceneMusic } from '../game/sceneMusic';
 import { readSceneEnterStyle, runSceneEnter, transitionToHub, transitionToScene } from '../game/sceneTransition';
 import { drawDetectiveHubBackdrop } from '../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
+import { spawnSamuelBuddy } from '../game/characterCompanion';
 
 export class DetectiveHubScene extends Phaser.Scene {
   constructor() {
@@ -39,18 +40,13 @@ export class DetectiveHubScene extends Phaser.Scene {
     this.drawRewardsBar(x, y - (layout.portrait ? 208 : 182) * s, s, layout.portrait);
     this.drawDailyMission(x, y - (layout.portrait ? 165 : 140) * s, s, layout.portrait);
 
-    const companion = this.add.text(x - this.scale.width / 2 + 42, y + (layout.portrait ? 268 : 248) * s, '🕵️', {
-      fontSize: `${36 * s}px`,
-    });
-    companion.setDepth(4);
-    this.tweens.add({
-      targets: companion,
-      y: companion.y - 6 * s,
-      duration: 1100,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    spawnSamuelBuddy(
+      this,
+      x - this.scale.width / 2 + 52,
+      y + (layout.portrait ? 268 : 248) * s,
+      s,
+      4,
+    );
 
     const cases = [...DETECTIVE_CASES].sort((a, b) => a.order - b.order);
     if (layout.portrait) {
@@ -94,7 +90,7 @@ export class DetectiveHubScene extends Phaser.Scene {
     const panel = drawComicPanel(this, x, y, portrait ? 340 * scale : 520 * scale, portrait ? 280 * scale : 240 * scale);
     const title = addComicText(this, x, y - 72 * scale, 'So geht\'s!', 30 * scale);
     const body = this.add
-      .text(x, y - 12 * scale, '🕵️ Fall 1 ist frei.\n⭐ Mehr Sterne = besser.\n🔒 Nächster Fall nach dem vorherigen.\n📋 Tages-Mission gibt Extra-Sticker!', {
+      .text(x, y - 12 * scale, 'Fall 1 ist frei.\n⭐ Mehr Sterne = besser.\n🔒 Nächster Fall nach dem vorherigen.\n📋 Tages-Mission gibt Extra-Sticker!', {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
         fontSize: `${portrait ? 17 : 19}px`,
         color: '#1a1a2e',

@@ -8,6 +8,7 @@ import {
   drawIllustratedBike,
   type BikeDrawOptions,
 } from './bikeGraphics';
+import { drawSamuelSideView } from './samuelCharacter';
 
 export function drawSamuel(
   scene: Phaser.Scene,
@@ -15,41 +16,7 @@ export function drawSamuel(
   y: number,
   scale = 1,
 ): Phaser.GameObjects.Container {
-  const container = scene.add.container(x, y);
-  const s = scale;
-  const line = 3 * s;
-
-  const shadow = scene.add.ellipse(0, 55 * s, 40 * s, 12 * s, 0x000000, 0.15);
-  container.add(shadow);
-
-  const legL = scene.add.rectangle(-8 * s, 30 * s, 10 * s, 28 * s, COLORS.samuelPants);
-  legL.setStrokeStyle(line, COLORS.outline);
-  const legR = scene.add.rectangle(8 * s, 30 * s, 10 * s, 28 * s, COLORS.samuelPants);
-  legR.setStrokeStyle(line, COLORS.outline);
-
-  const body = scene.add.rectangle(0, 8 * s, 28 * s, 32 * s, COLORS.samuelShirt);
-  body.setStrokeStyle(line, COLORS.outline);
-
-  const armL = scene.add.rectangle(-18 * s, 10 * s, 10 * s, 24 * s, COLORS.samuelSkin);
-  armL.setStrokeStyle(line, COLORS.outline);
-  armL.setAngle(15);
-  const armR = scene.add.rectangle(18 * s, 10 * s, 10 * s, 24 * s, COLORS.samuelSkin);
-  armR.setStrokeStyle(line, COLORS.outline);
-  armR.setAngle(-15);
-
-  const head = scene.add.circle(0, -22 * s, 18 * s, COLORS.samuelSkin);
-  head.setStrokeStyle(line, COLORS.outline);
-
-  const hair = scene.add.ellipse(0, -32 * s, 30 * s, 16 * s, 0x5c3d2e);
-  hair.setStrokeStyle(line, COLORS.outline);
-
-  const eyeL = scene.add.circle(-6 * s, -24 * s, 3 * s, COLORS.outline);
-  const eyeR = scene.add.circle(6 * s, -24 * s, 3 * s, COLORS.outline);
-  const smile = scene.add.arc(0, -18 * s, 8 * s, 0, 180, false, undefined, 0);
-  smile.setStrokeStyle(2 * s, COLORS.outline);
-
-  container.add([legL, legR, body, armL, armR, hair, head, eyeL, eyeR, smile]);
-  return container;
+  return drawSamuelSideView(scene, x, y, scale);
 }
 
 export function drawBike(

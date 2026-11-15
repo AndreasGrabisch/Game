@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import { drawSamuel } from './graphics';
+import { playSamuelWave, startSamuelIdle } from './samuelCharacter';
 import { feedbackSounds } from './feedbackAudio';
 import { duckAppMusic } from './appMusic';
 
@@ -51,9 +52,8 @@ export function runTransitionOverlay(
   const shade = scene.add.rectangle(cx, cy, width, height, COLORS.panel, 0.94).setDepth(depth);
   const samuel = drawSamuel(scene, cx - 70 * scale, cy + 10 * scale, 0.55 * scale);
   samuel.setDepth(depth + 1);
-
-  const wave = scene.add.text(cx + 48 * scale, cy - 28 * scale, '👋', { fontSize: `${42 * scale}px` }).setOrigin(0.5);
-  wave.setDepth(depth + 2);
+  startSamuelIdle(scene, samuel, 5 * scale, 900);
+  playSamuelWave(scene, samuel);
 
   const title = scene.add.text(cx, cy - 72 * scale, label, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',
@@ -70,24 +70,6 @@ export function runTransitionOverlay(
   const fill = scene.add.rectangle(cx - barW / 2, barY, 6, 14 * scale, COLORS.bikeFrame).setOrigin(0, 0.5).setDepth(depth + 2);
 
   scene.tweens.add({
-    targets: wave,
-    angle: 16,
-    duration: 180,
-    yoyo: true,
-    repeat: 4,
-    ease: 'Sine.easeInOut',
-  });
-
-  scene.tweens.add({
-    targets: samuel,
-    y: samuel.y - 8 * scale,
-    duration: 500,
-    yoyo: true,
-    repeat: -1,
-    ease: 'Sine.easeInOut',
-  });
-
-  scene.tweens.add({
     targets: fill,
     width: barW,
     duration: 420,
@@ -95,7 +77,6 @@ export function runTransitionOverlay(
     onComplete: () => {
       shade.destroy();
       samuel.destroy();
-      wave.destroy();
       title.destroy();
       track.destroy();
       fill.destroy();

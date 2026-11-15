@@ -5,6 +5,8 @@ import { feedbackSounds } from '../game/feedbackAudio';
 import { starsForMistakes } from '../game/scoring';
 import { isPartUnlocked } from '../game/Progress';
 import { getGameCenter } from './BootScene';
+import { drawRideBackdrop } from '../game/sceneBackgrounds';
+import { runSceneFadeIn } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 interface Prop {
@@ -57,6 +59,7 @@ export class RideScene extends Phaser.Scene {
     this.props = [];
     this.markers = [];
 
+    runSceneFadeIn(this);
     const { x, y, scale } = getGameCenter(this);
     this.layoutScale = scale;
     this.bikeScreenX = x - 180 * scale;
@@ -107,20 +110,14 @@ export class RideScene extends Phaser.Scene {
     this.riding = true;
   }
 
-  private drawWorld(x: number, y: number, scale: number): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, COLORS.sky);
-    this.add.circle(x + 340 * scale, y - 180 * scale, 36 * scale, 0xffe08a).setStrokeStyle(3, COLORS.outline);
+  private drawWorld(_x: number, _y: number, scale: number): void {
+    drawRideBackdrop(this, this.groundY, scale);
 
     for (let i = 0; i < 4; i++) {
       const cloud = this.add.ellipse(160 + i * 280, 70 + (i % 2) * 36, 100, 40, COLORS.white, 0.9);
       cloud.setStrokeStyle(2, COLORS.outline, 0.15);
       this.props.push({ obj: cloud, factor: 0.28, span: 1200 });
     }
-
-    this.add.rectangle(width / 2, height * 0.78, width, height * 0.48, COLORS.grass);
-    const road = this.add.rectangle(width / 2, this.groundY + 18 * scale, width, 74 * scale, 0x5c6770);
-    road.setStrokeStyle(3, COLORS.outline);
 
     for (let i = 0; i < 8; i++) {
       const dash = this.add.rectangle(80 + i * 140, this.groundY + 18 * scale, 64, 8, COLORS.white);

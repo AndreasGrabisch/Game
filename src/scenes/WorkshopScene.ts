@@ -8,6 +8,8 @@ import {
   drawStar,
 } from '../game/graphics';
 import { getGameCenter } from './BootScene';
+import { attachIdleBounce } from '../game/characterCompanion';
+import { drawLockIcon, drawWorkshopBackdrop } from '../game/sceneBackgrounds';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import {
   isMissionAvailable,
@@ -43,7 +45,8 @@ export class WorkshopScene extends Phaser.Scene {
       showHandlebar: isPartUnlocked('handlebar'),
     });
 
-    drawSamuel(this, x - 200 * scale, y + 60 * scale, 1.0 * scale);
+    const workshopSamuel = drawSamuel(this, x - 200 * scale, y + 60 * scale, 1.0 * scale);
+    attachIdleBounce(this, workshopSamuel, 5 * scale, 1200);
 
     const bikeReady =
       isPartUnlocked('wheels') && isPartUnlocked('pedals') && isPartUnlocked('handlebar');
@@ -124,11 +127,8 @@ export class WorkshopScene extends Phaser.Scene {
     }
 
     if (locked) {
-      const lock = this.add
-        .text(mx, my + 4 * scale, '🔒', { fontSize: `${20 * scale}px` })
-        .setOrigin(0.5);
+      drawLockIcon(this, mx, my + 4 * scale, scale * 0.75);
       label.setVisible(false);
-      lock.setVisible(true);
     } else {
       node.setInteractive({ useHandCursor: true });
       node.on('pointerdown', () => this.startMission(mission.id));
@@ -152,11 +152,6 @@ export class WorkshopScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, 0xfff8e7);
-    this.add.rectangle(width / 2, height * 0.85, width, height * 0.3, COLORS.grass);
-
-    const panel = this.add.rectangle(width / 2, height * 0.15, width * 0.9, 60, COLORS.panel);
-    panel.setStrokeStyle(3, COLORS.outline);
+    drawWorkshopBackdrop(this);
   }
 }

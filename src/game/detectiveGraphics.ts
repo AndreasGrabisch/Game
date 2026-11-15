@@ -11,19 +11,32 @@ export interface DrawerParts {
 
 export function createDrawerParts(scene: Phaser.Scene, width: number, height: number): DrawerParts {
   const cavity = scene.add.container(0, 0);
-  const inner = scene.add.rectangle(0, 0, width - 10, height - 10, DETECTIVE_PAPER);
-  inner.setStrokeStyle(3, DETECTIVE_MARKER_GREEN, 0.7);
-  cavity.add(inner);
+  const innerShade = scene.add.rectangle(0, 4, width - 8, height - 8, 0x2a2018, 0.25);
+  const inner = scene.add.graphics();
+  inner.fillStyle(DETECTIVE_PAPER, 1);
+  inner.lineStyle(2, DETECTIVE_MARKER_GREEN, 0.6);
+  inner.fillRoundedRect(-(width - 10) / 2, -(height - 10) / 2, width - 10, height - 10, 6);
+  inner.strokeRoundedRect(-(width - 10) / 2, -(height - 10) / 2, width - 10, height - 10, 6);
+  cavity.add([innerShade, inner]);
 
   const front = scene.add.container(0, 0);
-  const body = scene.add.rectangle(0, 0, width, height, 0xe8dcc8);
-  body.setStrokeStyle(4, DETECTIVE_MARKER_GREEN);
-  const scribble = scene.add.rectangle(0, 0, width - 16, height - 18, DETECTIVE_MARKER_GREY, 0.18);
-  scribble.setStrokeStyle(2, DETECTIVE_MARKER_GREEN, 0.25);
-  const handle = scene.add.circle(0, height * 0.3, 9, DETECTIVE_MARKER_GREEN, 0.25);
-  handle.setStrokeStyle(3, DETECTIVE_MARKER_GREEN);
-  const groove = scene.add.rectangle(0, -height * 0.14, width - 22, 4, DETECTIVE_MARKER_GREEN, 0.2);
-  front.add([body, scribble, groove, handle]);
+  const shadow = scene.add.rectangle(3, 4, width, height, 0x000000, 0.12);
+  const bodyGfx = scene.add.graphics();
+  bodyGfx.fillStyle(0xdeb887, 1);
+  bodyGfx.lineStyle(4, 0x6b4f2a);
+  bodyGfx.fillRoundedRect(-width / 2, -height / 2, width, height, 8);
+  bodyGfx.strokeRoundedRect(-width / 2, -height / 2, width, height, 8);
+  const grain = scene.add.graphics();
+  grain.lineStyle(1, 0x8b6914, 0.25);
+  for (let y = -height / 2 + 8; y < height / 2 - 8; y += 10) {
+    grain.lineBetween(-width / 2 + 6, y, width / 2 - 6, y + 2);
+  }
+  const plaque = scene.add.rectangle(0, -height * 0.18, width - 20, height * 0.22, DETECTIVE_MARKER_GREY, 0.22);
+  plaque.setStrokeStyle(2, DETECTIVE_MARKER_GREEN, 0.35);
+  const knob = scene.add.circle(0, height * 0.28, 10, 0xd4d4d4);
+  knob.setStrokeStyle(3, COLORS.outline);
+  const knobShine = scene.add.circle(-3, height * 0.28 - 3, 3, COLORS.white, 0.7);
+  front.add([shadow, bodyGfx, grain, plaque, knob, knobShine]);
 
   return { cavity, front, openOffsetY: height * 0.42 };
 }

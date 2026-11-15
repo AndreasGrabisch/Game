@@ -3,7 +3,7 @@ import { COLORS } from '../game/constants';
 import { addComicText, createComicButton } from '../game/graphics';
 import { reactCompanionCheer, spawnSamuelCompanion } from '../game/characterCompanion';
 import { feedbackSounds } from '../game/feedbackAudio';
-import { drawPlaygroundSky } from '../game/appHomeGraphics';
+import { drawComingSoonParkBackdrop } from '../game/sceneBackgrounds';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { getGameCenter } from './BootScene';
@@ -17,7 +17,7 @@ export class ComingSoonScene extends Phaser.Scene {
   create(): void {
     runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'home');
-    drawPlaygroundSky(this);
+    drawComingSoonParkBackdrop(this);
 
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);

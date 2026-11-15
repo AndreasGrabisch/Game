@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants';
+import { drawPlaygroundSky } from '../game/appHomeGraphics';
 import { launchInitialHub } from '../game/sceneTransition';
 
 export class BootScene extends Phaser.Scene {
@@ -13,6 +14,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     this.scale.on('resize', this.resize, this);
+    drawPlaygroundSky(this, 0);
     launchInitialHub(this);
   }
 

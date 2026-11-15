@@ -196,9 +196,16 @@ export function drawComicPanel(
   height: number,
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y);
-  const bg = scene.add.rectangle(0, 0, width, height, COLORS.panel);
-  bg.setStrokeStyle(4, COLORS.outline);
-  container.add(bg);
+  const shadow = scene.add.graphics();
+  shadow.fillStyle(0x000000, 0.1);
+  shadow.fillRoundedRect(-width / 2 + 3, -height / 2 + 4, width, height, 12);
+  const panel = scene.add.graphics();
+  panel.fillStyle(COLORS.panel, 1);
+  panel.lineStyle(4, COLORS.outline);
+  panel.fillRoundedRect(-width / 2, -height / 2, width, height, 12);
+  panel.strokeRoundedRect(-width / 2, -height / 2, width, height, 12);
+  const gloss = scene.add.rectangle(0, -height / 2 + 10, width - 14, height * 0.18, COLORS.white, 0.2);
+  container.add([shadow, panel, gloss]);
   return container;
 }
 
@@ -260,27 +267,47 @@ export function createComicButton(
   width = 200,
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y);
-  const bg = scene.add.rectangle(0, 0, width, 56, color);
-  bg.setStrokeStyle(3, COLORS.outline);
-  bg.setInteractive({ useHandCursor: true });
+  const height = 56;
+  const radius = 14;
+
+  const shadow = scene.add.graphics();
+  shadow.fillStyle(0x000000, 0.14);
+  shadow.fillRoundedRect(-width / 2 + 2, -height / 2 + 4, width, height, radius);
+
+  const bgGfx = scene.add.graphics();
+  const drawBg = (alpha = 1) => {
+    bgGfx.clear();
+    bgGfx.fillStyle(color, alpha);
+    bgGfx.lineStyle(4, COLORS.outline);
+    bgGfx.fillRoundedRect(-width / 2, -height / 2, width, height, radius);
+    bgGfx.strokeRoundedRect(-width / 2, -height / 2, width, height, radius);
+  };
+  drawBg(1);
+
+  const gloss = scene.add.rectangle(0, -height / 2 + 9, width - 16, 10, COLORS.white, 0.28);
+
+  const hit = scene.add.rectangle(0, 0, width, height, 0xffffff, 0.001);
+  hit.setInteractive({ useHandCursor: true });
 
   const text = scene.add
-    .text(0, 0, label, {
+    .text(0, 2, label, {
       fontFamily: 'Fredoka, Comic Sans MS, cursive',
       fontSize: '22px',
       color: '#ffffff',
       fontStyle: 'bold',
+      stroke: '#1a1a2e',
+      strokeThickness: 3,
     })
     .setOrigin(0.5);
 
-  bg.on('pointerover', () => bg.setFillStyle(color, 0.85));
-  bg.on('pointerout', () => bg.setFillStyle(color, 1));
-  bg.on('pointerdown', () => {
+  hit.on('pointerover', () => drawBg(0.9));
+  hit.on('pointerout', () => drawBg(1));
+  hit.on('pointerdown', () => {
     void feedbackSounds.unlock();
     feedbackSounds.tap();
     onClick();
   });
 
-  container.add([bg, text]);
+  container.add([shadow, bgGfx, gloss, hit, text]);
   return container;
 }

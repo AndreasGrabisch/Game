@@ -6,10 +6,8 @@ import type { HubWorldTier } from './hubWorldProgress';
 export function drawPlaygroundSky(scene: Phaser.Scene, worldTier: HubWorldTier = 0): Phaser.GameObjects.Graphics {
   const { width, height } = scene.scale;
   const gfx = scene.add.graphics().setDepth(0);
-  gfx.fillStyle(COLORS.sky, 1);
+  gfx.fillGradientStyle(0x9ed8ff, 0x9ed8ff, 0xc8f0a8, 0x7ec850, 1);
   gfx.fillRect(0, 0, width, height);
-  gfx.fillStyle(COLORS.grass, 1);
-  gfx.fillRect(0, height * 0.78, width, height * 0.22);
 
   const sun = scene.add.circle(width * 0.88, height * 0.12, 42, COLORS.star, 0.95);
   sun.setStrokeStyle(3, COLORS.outline, 0.25);
@@ -22,9 +20,17 @@ export function drawPlaygroundSky(scene: Phaser.Scene, worldTier: HubWorldTier =
     cloud.setDepth(0);
   }
 
-  const rug = scene.add.rectangle(width / 2, height * 0.88, width * 0.72, 36, COLORS.panel, 0.85);
-  rug.setStrokeStyle(3, COLORS.outline, 0.2);
-  rug.setDepth(0);
+  const pathGfx = scene.add.graphics().setDepth(0);
+  pathGfx.fillStyle(0xd4b896, 0.65);
+  pathGfx.fillEllipse(width / 2, height * 0.89, width * 0.62, 44);
+  pathGfx.lineStyle(3, COLORS.outline, 0.12);
+  pathGfx.strokeEllipse(width / 2, height * 0.89, width * 0.62, 44);
+
+  for (let i = 0; i < 4; i++) {
+    const bush = scene.add.ellipse(60 + i * (width / 4.2), height * 0.76, 70, 36, 0x5cb04a, 0.85);
+    bush.setStrokeStyle(3, COLORS.outline, 0.12);
+    bush.setDepth(0);
+  }
 
   if (worldTier >= 1) {
     for (let i = 0; i < 3 + worldTier; i++) {

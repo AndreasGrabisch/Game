@@ -1,6 +1,6 @@
 import { isRideUnlocked } from '../game/appProgress';
 
-export type AppModeIcon = 'bike' | 'detective' | 'colors' | 'ride';
+export type AppModeIcon = 'bike' | 'detective' | 'colors' | 'ride' | 'soon';
 
 export interface AppHomeMode {
   id: string;
@@ -45,6 +45,17 @@ export const APP_HOME_MODES: AppHomeMode[] = [
     sceneKey: 'ColorSortScene',
     accentColor: 0x6bcb77,
     icon: 'colors',
+    isUnlocked: () => true,
+    lockHint: '',
+  },
+  {
+    id: 'ball',
+    title: 'Ballspiel',
+    tagline: 'Bald: Werfen und Fangen',
+    shortKidLine: 'Kommt bald!',
+    sceneKey: 'ComingSoonScene',
+    accentColor: 0xffd93d,
+    icon: 'soon',
     isUnlocked: () => true,
     lockHint: '',
   },

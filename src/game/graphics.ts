@@ -7,6 +7,7 @@ export interface BikeDrawOptions {
   showFrame?: boolean;
   showPedals?: boolean;
   showHandlebar?: boolean;
+  showBell?: boolean;
   wheelAlpha?: number;
   frameAlpha?: number;
 }
@@ -66,6 +67,7 @@ export function drawBike(
     showFrame = true,
     showPedals = false,
     showHandlebar = false,
+    showBell = false,
     wheelAlpha = 1,
     frameAlpha = 1,
   } = options;
@@ -121,6 +123,13 @@ export function drawBike(
     const pedalR = scene.add.rectangle(14 * s, 20 * s, 12 * s, 6 * s, COLORS.wheelRim);
     pedalR.setStrokeStyle(2 * s, COLORS.outline);
     container.add([crank, pedalL, pedalR]);
+  }
+
+  if (showBell) {
+    const bell = scene.add.circle(-16 * s, -58 * s, 9 * s, COLORS.star);
+    bell.setStrokeStyle(2 * s, COLORS.outline);
+    const ding = scene.add.text(-16 * s, -58 * s, '🔔', { fontSize: `${10 * s}px` }).setOrigin(0.5);
+    container.add([bell, ding]);
   }
 
   return container;

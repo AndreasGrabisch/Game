@@ -1,5 +1,6 @@
 import { loadProgress } from './Progress';
 import { getTotalDetectiveStars } from './detectiveProgress';
+import { CORE_BIKE_MISSIONS } from './kidDifficultyCurve';
 
 export function getBikeMissionStars(): number {
   const progress = loadProgress();
@@ -16,15 +17,12 @@ export function getAppTotalStars(): number {
 
 export function isRideUnlocked(): boolean {
   const p = loadProgress();
-  return (
-    p.completedMissions.includes('mission-01-wheels') &&
-    p.completedMissions.includes('mission-02-pedals') &&
-    p.completedMissions.includes('mission-03-handlebar')
-  );
+  return CORE_BIKE_MISSIONS.every((id) => p.completedMissions.includes(id));
 }
 
 export function getBikeBuildProgressLabel(): string {
   const p = loadProgress();
-  const done = p.completedMissions.length;
-  return `${done}/3 Teile`;
+  const core = CORE_BIKE_MISSIONS.filter((id) => p.completedMissions.includes(id)).length;
+  const bell = p.completedMissions.includes('mission-04-bell');
+  return bell ? `${core}/3 + 🔔` : `${core}/3 Teile`;
 }

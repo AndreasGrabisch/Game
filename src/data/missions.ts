@@ -1,7 +1,8 @@
+/** Schwierigkeitskurve: siehe `src/game/kidDifficultyCurve.ts` */
 export interface MissionData {
   id: string;
   title: string;
-  part: 'wheels' | 'pedals' | 'handlebar';
+  part: 'wheels' | 'pedals' | 'handlebar' | 'bell';
   intro: string;
   learn1: string;
   learn2: string;
@@ -37,7 +38,17 @@ export const MISSIONS: Record<string, MissionData> = {
     intro: 'Fast fertig! Mit dem Lenker kann ich steuern, wohin ich fahren will.',
     learn1: 'Bewege den Lenker nach links und rechts — oder tippe auf die Knöpfe. So ändert sich die Richtung!',
     learn2: 'Der Lenker ist mit dem Vorderrad verbunden.',
-    success: "Mein Fahrrad ist fertig! Los geht's!",
+    success: 'Fast fertig! Noch die Klingel — dann bist du ein Profi!',
     hint: 'Tipp: Links lenken = nach links fahren.',
+  },
+  'mission-04-bell': {
+    id: 'mission-04-bell',
+    title: 'Klingel & Glück',
+    part: 'bell',
+    intro: 'Letzter Schliff! Eine Klingel sagt „Guten Tag“ und warnt andere.',
+    learn1: 'Tippe nur die goldene Klingel 🔔 — nicht die anderen Sachen!',
+    learn2: 'Klingeln ist höflich und macht Spaß!',
+    success: 'Ting-ting! Deine Bonus-Welt auf dem Spielplatz leuchtet jetzt!',
+    hint: 'Tipp: Warte, bis die Klingel groß leuchtet.',
   },
 };

@@ -15,24 +15,28 @@ import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { CORE_BIKE_MISSIONS } from '../game/kidDifficultyCurve';
 import {
   isMissionAvailable,
   isPartUnlocked,
   loadProgress,
   getNextMission,
 } from '../game/Progress';
+import { getBikeBuildProgressLabel } from '../game/appProgress';
 import { MISSIONS } from '../data/missions';
 
 const PART_ICONS: Record<VehiclePart, string> = {
   wheels: '🛞',
   pedals: '⚙️',
   handlebar: '🎯',
+  bell: '🔔',
 };
 
 const MISSION_MAP: { id: string; part: VehiclePart; x: number; y: number }[] = [
-  { id: 'mission-01-wheels', part: 'wheels', x: -180, y: -60 },
-  { id: 'mission-02-pedals', part: 'pedals', x: 0, y: -120 },
-  { id: 'mission-03-handlebar', part: 'handlebar', x: 180, y: -60 },
+  { id: 'mission-01-wheels', part: 'wheels', x: -200, y: -50 },
+  { id: 'mission-02-pedals', part: 'pedals', x: -70, y: -120 },
+  { id: 'mission-03-handlebar', part: 'handlebar', x: 70, y: -120 },
+  { id: 'mission-04-bell', part: 'bell', x: 200, y: -50 },
 ];
 
 export class WorkshopScene extends Phaser.Scene {
@@ -50,10 +54,8 @@ export class WorkshopScene extends Phaser.Scene {
     const layout = getDetectiveLayoutMode(this);
     const s = scale * (layout.portrait ? 0.86 : 1);
     const progress = loadProgress();
-    const done = progress.completedMissions.length;
-
     addComicText(this, x, y - (layout.portrait ? 248 : 220) * s, '🚲 Werkstatt', 32 * s);
-    addComicText(this, x, y - (layout.portrait ? 212 : 186) * s, `Ziel: ${done}/3 Teile`, 20 * s);
+    addComicText(this, x, y - (layout.portrait ? 212 : 186) * s, `Ziel: ${getBikeBuildProgressLabel()}`, 20 * s);
 
     const bikeY = y + (layout.portrait ? 100 : 80) * s;
     drawBike(this, x, bikeY, (layout.portrait ? 1.05 : 1.3) * s, {
@@ -61,6 +63,7 @@ export class WorkshopScene extends Phaser.Scene {
       showWheels: isPartUnlocked('wheels'),
       showPedals: isPartUnlocked('pedals'),
       showHandlebar: isPartUnlocked('handlebar'),
+      showBell: isPartUnlocked('bell'),
     });
 
     this.samuelCompanion = drawSamuel(
@@ -71,8 +74,7 @@ export class WorkshopScene extends Phaser.Scene {
     );
     attachIdleBounce(this, this.samuelCompanion, 5 * s, 1200);
 
-    const bikeReady =
-      isPartUnlocked('wheels') && isPartUnlocked('pedals') && isPartUnlocked('handlebar');
+    const bikeReady = CORE_BIKE_MISSIONS.every((id) => progress.completedMissions.includes(id));
 
     if (bikeReady) {
       feedbackSounds.workshopCheer();
@@ -81,7 +83,7 @@ export class WorkshopScene extends Phaser.Scene {
     }
 
     const missionLayout = layout.portrait
-      ? MISSION_MAP.map((m, index) => ({ ...m, x: 0, y: -100 + index * 72 }))
+      ? MISSION_MAP.map((m, index) => ({ ...m, x: 0, y: -112 + index * 58 }))
       : MISSION_MAP;
 
     for (const mission of missionLayout) {
@@ -185,6 +187,8 @@ export class WorkshopScene extends Phaser.Scene {
       this.scene.start('Mission02Pedals');
     } else if (missionId === 'mission-03-handlebar') {
       this.scene.start('Mission03Handlebar');
+    } else if (missionId === 'mission-04-bell') {
+      this.scene.start('Mission04Bell');
     } else {
       this.scene.start('WorkshopScene');
     }

@@ -65,6 +65,9 @@ export function isMissionAvailable(missionId: string): boolean {
   if (missionId === 'mission-03-handlebar') {
     return progress.completedMissions.includes('mission-02-pedals');
   }
+  if (missionId === 'mission-04-bell') {
+    return progress.completedMissions.includes('mission-03-handlebar');
+  }
   return false;
 }
 
@@ -83,6 +86,7 @@ const PART_TO_MISSION: Record<VehiclePart, string> = {
   wheels: 'mission-01-wheels',
   pedals: 'mission-02-pedals',
   handlebar: 'mission-03-handlebar',
+  bell: 'mission-04-bell',
 };
 
 export function resetProgress(): void {

@@ -11,7 +11,8 @@ import {
   type DetectiveGearId,
   type DetectiveGearItem,
 } from '../data/detectiveItems';
-import { awardDetectiveCase } from '../game/detectiveProgress';
+import { bumpDailyMission, type DailyMissionKind } from '../game/detectiveDaily';
+import { awardDetectiveCase, isFastShuffleEnabled, setFastShuffle } from '../game/detectiveProgress';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { createDrawerParts, drawCabinetItem } from '../game/detectiveGraphics';
 import {
@@ -71,6 +72,9 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   private hintShown = false;
   private hintPulseTween?: Phaser.Tweens.Tween;
   private hintButton?: Phaser.GameObjects.Container;
+  private shuffleSkipButton?: Phaser.GameObjects.Container;
+  private shuffleToken = 0;
+  private buddy?: Phaser.GameObjects.Text;
 
   constructor() {
     super({ key: 'DetectiveCabinetScene' });
@@ -102,6 +106,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.hintShown = false;
     this.hintPulseTween = undefined;
     this.hintButton = undefined;
+    this.buddy = undefined;
 
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
@@ -129,6 +134,13 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       this.reactSamuel('idle');
     }
 
+    const buddyX = x - this.scale.width / 2 + 56 * this.layoutScale;
+    const buddyY = y + (this.portraitMode ? 170 : 152) * this.layoutScale;
+    this.buddy = this.add
+      .text(buddyX, buddyY, '🕵️', { fontSize: `${34 * this.layoutScale}px` })
+      .setOrigin(0.5)
+      .setDepth(8);
+
     this.initDrawerModels();
     this.buildCabinetFrame();
     this.createDrawerViews();
@@ -147,7 +159,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       '💡 Hilfe',
       () => this.giveHint(),
       DETECTIVE_MARKER_GREEN,
-      this.portraitMode ? 120 : 160,
+      this.portraitMode ? 136 : 160,
     );
     this.hintButton.setDepth(12);
     const hintReady = this.caseDef.hintAfterDecoys === 0;
@@ -184,7 +196,21 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       .setAlpha(0)
       .setScale(0.92);
 
-    const startBtn = createComicButton(this, x, y + 120 * scale, 'LOS!', async () => {
+    const introSpeech = `${this.caseDef.title}. ${this.caseDef.introShort.replace('\n', ' ')} Tippe Schubladen an und finde ${this.caseGear.length} Sachen!`;
+
+    const readBtn = createComicButton(
+      this,
+      x - 130 * scale,
+      y + 120 * scale,
+      '🔊 Vorlesen',
+      () => {
+        void showSpeechIf(this, introSpeech);
+      },
+      0xff6b35,
+      150,
+    );
+
+    const startBtn = createComicButton(this, x + 120 * scale, y + 120 * scale, 'LOS!', async () => {
       await tryEnableGameDisplay();
       await detectiveSounds.unlock();
       detectiveSounds.intro();
@@ -197,15 +223,12 @@ export class DetectiveCabinetScene extends Phaser.Scene {
           introSamuel.destroy(true);
           introLine.destroy();
           this.inputLocked = false;
-          void showSpeechIf(
-            this,
-            'Tippe eine Schublade an! Suche die fünf Detektiv-Sachen mit Lupe, Lampe und Kreide.',
-          );
+          void showSpeechIf(this, introSpeech);
         },
       });
-    }, DETECTIVE_MARKER_GREEN);
+    }, DETECTIVE_MARKER_GREEN, 150);
 
-    overlay.add([veil, panel, introLine, startBtn]);
+    overlay.add([veil, panel, introLine, readBtn, startBtn]);
     overlay.setAlpha(0);
     this.tweens.add({ targets: overlay, alpha: 1, duration: DETECTIVE_TIMING.introFadeIn });
     this.tweens.add({
@@ -215,6 +238,40 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       duration: DETECTIVE_TIMING.introTextIn,
       ease: 'Back.easeOut',
     });
+  }
+
+  private reactBuddy(mood: 'happy' | 'oops' | 'peek'): void {
+    if (!this.buddy) return;
+    const face = mood === 'happy' ? '🎉' : mood === 'oops' ? '😅' : '👀';
+    this.buddy.setText(face);
+    this.tweens.add({
+      targets: this.buddy,
+      scale: mood === 'happy' ? 1.35 : 1.15,
+      duration: 220,
+      yoyo: true,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(900, () => {
+          if (this.buddy?.active) this.buddy.setText('🕵️');
+        });
+      },
+    });
+  }
+
+  private trackDaily(kind: DailyMissionKind, amount = 1): void {
+    const { daily, justCompleted } = bumpDailyMission(kind, amount);
+    if (!justCompleted) return;
+    const { x, y } = getGameCenter(this);
+    floatFeedback(
+      this,
+      x,
+      y - 130 * this.layoutScale,
+      `Tages-Mission! ${daily.rewardEmoji}`,
+      '#2d6a45',
+      24 * this.layoutScale,
+    );
+    detectiveSounds.found();
+    this.reactBuddy('happy');
   }
 
   private reactSamuel(mood: SamuelMood): void {
@@ -268,7 +325,8 @@ export class DetectiveCabinetScene extends Phaser.Scene {
 
       root.add([cavity, front]);
 
-      const hit = this.add.rectangle(0, 0, this.drawerW, this.drawerH, 0xffffff, 0.001);
+      const tapPad = this.portraitMode ? 1.28 : 1.08;
+      const hit = this.add.rectangle(0, 0, this.drawerW * tapPad, this.drawerH * tapPad, 0xffffff, 0.001);
       hit.setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => this.onDrawerTapped(model.uid));
       root.add(hit);
@@ -298,6 +356,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.inputLocked = true;
     void detectiveSounds.unlock();
     this.reactSamuel('peek');
+    this.reactBuddy('peek');
     this.animateDrawerOpen(view, () => {
       if (view.model.isDetective) {
         this.showDetectiveReveal(view.model.itemId as DetectiveGearId, () => this.handleDetectiveFind(view));
@@ -402,8 +461,10 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     const gearId = view.model.itemId as DetectiveGearId;
     view.model.lockedOpen = true;
     this.collected.add(gearId);
+    this.trackDaily('find_items');
     this.refreshBackpack();
     this.reactSamuel('happy');
+    this.reactBuddy('happy');
     this.showSamuelSpeech('Super Fund!');
     detectiveSounds.found();
 
@@ -425,6 +486,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   private handleDecoy(view: DrawerView): void {
     const item = getItemById(view.model.itemId);
     this.reactSamuel('oops');
+    this.reactBuddy('oops');
     detectiveSounds.decoy();
     if (item) {
       this.showSamuelSpeech(`${item.emoji} Nur ${item.kidLabel}!`);
@@ -438,6 +500,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private animateDrawerOpen(view: DrawerView, onComplete: () => void): void {
+    this.trackDaily('open_drawers');
     detectiveSounds.drawerOpen();
     view.isOpen = true;
     view.itemHolder.setVisible(true);
@@ -495,12 +558,66 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     view.itemHolder.setScale(1);
   }
 
+  private showShuffleSkip(onSkip: () => void): void {
+    const { x, y, scale } = getGameCenter(this);
+    const s = scale * (this.portraitMode ? 0.78 : 1);
+    this.shuffleSkipButton?.destroy(true);
+    this.shuffleSkipButton = createComicButton(
+      this,
+      x,
+      y + (this.portraitMode ? 195 : 168) * s,
+      '⏭ Überspringen',
+      onSkip,
+      DETECTIVE_MARKER_GREEN,
+      168,
+    );
+    this.shuffleSkipButton.setDepth(40);
+  }
+
+  private hideShuffleSkip(): void {
+    this.shuffleSkipButton?.destroy(true);
+    this.shuffleSkipButton = undefined;
+  }
+
+  private applyInstantShuffle(onDone: () => void): void {
+    const movable = this.drawers.filter((d) => !d.lockedOpen);
+    if (movable.length === 0) {
+      onDone();
+      return;
+    }
+    const shuffledSlots = shuffleArray(movable.map((d) => d.slot));
+    movable.forEach((drawer, index) => {
+      drawer.slot = shuffledSlots[index];
+      const view = this.drawerViews.find((v) => v.model.uid === drawer.uid)!;
+      const pos = this.slotToWorld(drawer.slot);
+      view.root.setPosition(pos.x, pos.y);
+      view.root.setAngle(0);
+      view.root.setScale(1);
+    });
+    onDone();
+  }
+
+  private abortShuffleAnimation(onDone: () => void): void {
+    this.shuffleToken += 1;
+    this.tweens.killTweensOf(this.drawerViews.map((v) => v.root));
+    this.hideShuffleSkip();
+    this.applyInstantShuffle(onDone);
+  }
+
   private playShuffleAnimation(onDone: () => void): void {
     const movable = this.drawers.filter((d) => !d.lockedOpen);
     if (movable.length === 0) {
       onDone();
       return;
     }
+
+    if (isFastShuffleEnabled()) {
+      this.applyInstantShuffle(onDone);
+      return;
+    }
+
+    const token = ++this.shuffleToken;
+    this.showShuffleSkip(() => this.abortShuffleAnimation(onDone));
 
     const movableViews = movable.map((d) => this.drawerViews.find((v) => v.model.uid === d.uid)!);
     detectiveSounds.shuffle();
@@ -533,16 +650,17 @@ export class DetectiveCabinetScene extends Phaser.Scene {
         yoyo: true,
         repeat: DETECTIVE_TIMING.shuffleWiggleRepeats,
         onComplete: () => {
+          if (token !== this.shuffleToken) return;
           view.root.setAngle(0);
           view.root.setScale(1);
           wiggleDone -= 1;
-          if (wiggleDone === 0) this.shuffleMovableDrawers(onDone);
+          if (wiggleDone === 0) this.shuffleMovableDrawers(onDone, token);
         },
       });
     });
   }
 
-  private shuffleMovableDrawers(onDone: () => void): void {
+  private shuffleMovableDrawers(onDone: () => void, token = this.shuffleToken): void {
     const movable = this.drawers.filter((d) => !d.lockedOpen);
     const visualSlot = new Map<number, number>();
     const targetSlot = new Map<number, number>();
@@ -634,9 +752,11 @@ export class DetectiveCabinetScene extends Phaser.Scene {
 
     const totalMs = (flightOrder.length - 1) * chainStepMs + flyDuration;
     this.time.delayedCall(totalMs, () => {
+      if (token !== this.shuffleToken) return;
       movable.forEach((drawer) => {
         drawer.slot = targetSlot.get(drawer.uid)!;
       });
+      this.hideShuffleSkip();
       onDone();
     });
   }
@@ -769,8 +889,29 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private createFooterButtons(x: number, y: number, scale: number): void {
-    createComicButton(this, x - 130 * scale, y, 'Noch einmal', () => this.scene.restart(), 0xff6b35);
-    createComicButton(this, x + 130 * scale, y, 'Fälle', () => this.scene.start('DetectiveHubScene'), 0x5b6ee1);
+    const fast = isFastShuffleEnabled();
+    createComicButton(
+      this,
+      x - (this.portraitMode ? 150 : 170) * scale,
+      y,
+      fast ? '⚡ Schnell' : 'Mischen',
+      () => {
+        setFastShuffle(!isFastShuffleEnabled());
+        floatFeedback(this, x, y - 28 * scale, isFastShuffleEnabled() ? 'Kurz!' : 'Normal', '#3d7a54', 18 * scale);
+      },
+      0x888899,
+      this.portraitMode ? 92 : 100,
+    );
+    createComicButton(this, x, y, 'Nochmal', () => this.scene.restart(), 0xff6b35, this.portraitMode ? 92 : 110);
+    createComicButton(
+      this,
+      x + (this.portraitMode ? 150 : 170) * scale,
+      y,
+      'Fälle',
+      () => this.scene.start('DetectiveHubScene'),
+      0x5b6ee1,
+      this.portraitMode ? 92 : 100,
+    );
   }
 
   private playCelebrationParticles(cx: number, cy: number, scale: number): void {
@@ -800,8 +941,10 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     detectiveSounds.win();
     detectiveSounds.celebrate();
     this.reactSamuel('happy');
+    this.reactBuddy('happy');
     const stars = this.decoyCount <= 1 ? 3 : this.decoyCount <= 3 ? 2 : 1;
     awardDetectiveCase(this.caseId, stars, this.caseDef.stickerReward, this.caseId);
+    this.trackDaily('finish_case');
     const { x, y, scale } = getGameCenter(this);
     const s = scale * (this.portraitMode ? 0.78 : 1);
     this.playCelebrationParticles(x, y - 30 * s, s);

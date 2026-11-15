@@ -8,6 +8,7 @@ import { MenuScene } from './scenes/MenuScene';
 import { WorkshopScene } from './scenes/WorkshopScene';
 import { DetectiveCabinetScene } from './scenes/DetectiveCabinetScene';
 import { DetectiveHubScene } from './scenes/DetectiveHubScene';
+import { DetectiveWallScene } from './scenes/DetectiveWallScene';
 import { Mission01Wheels } from './scenes/missions/Mission01Wheels';
 import { Mission02Pedals } from './scenes/missions/Mission02Pedals';
 import { Mission03Handlebar } from './scenes/missions/Mission03Handlebar';
@@ -32,6 +33,7 @@ const config: Phaser.Types.Core.GameConfig = {
     MenuScene,
     WorkshopScene,
     DetectiveHubScene,
+    DetectiveWallScene,
     DetectiveCabinetScene,
     Mission01Wheels,
     Mission02Pedals,

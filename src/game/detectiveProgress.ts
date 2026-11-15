@@ -1,3 +1,5 @@
+import type { DailyMissionState } from './detectiveDaily';
+
 const STORAGE_KEY = 'samuel-detective-progress';
 
 export interface DetectiveProgress {
@@ -5,6 +7,10 @@ export interface DetectiveProgress {
   caseStars: Record<string, number>;
   stickers: string[];
   badges: string[];
+  daily?: DailyMissionState;
+  /** Schubladen-Mischen überspringen / sehr kurz (nur lokal). */
+  fastShuffle?: boolean;
+  hubTutorialSeen?: boolean;
 }
 
 const DEFAULT: DetectiveProgress = {
@@ -24,6 +30,9 @@ export function loadDetectiveProgress(): DetectiveProgress {
       caseStars: parsed.caseStars ?? {},
       stickers: parsed.stickers ?? [],
       badges: parsed.badges ?? [],
+      daily: parsed.daily,
+      fastShuffle: parsed.fastShuffle ?? false,
+      hubTutorialSeen: parsed.hubTutorialSeen ?? false,
     };
   } catch {
     return { ...DEFAULT };
@@ -71,6 +80,26 @@ export function awardDetectiveCase(
   }
   saveDetectiveProgress(progress);
   return progress;
+}
+
+export function isFastShuffleEnabled(): boolean {
+  return loadDetectiveProgress().fastShuffle === true;
+}
+
+export function setFastShuffle(enabled: boolean): void {
+  const progress = loadDetectiveProgress();
+  progress.fastShuffle = enabled;
+  saveDetectiveProgress(progress);
+}
+
+export function hasSeenDetectiveHubTutorial(): boolean {
+  return loadDetectiveProgress().hubTutorialSeen === true;
+}
+
+export function setDetectiveHubTutorialSeen(): void {
+  const progress = loadDetectiveProgress();
+  progress.hubTutorialSeen = true;
+  saveDetectiveProgress(progress);
 }
 
 export function resetDetectiveProgress(): void {

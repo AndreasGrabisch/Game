@@ -4,34 +4,46 @@ import { drawHubBikeIcon } from './bikeGraphics';
 import { drawSoccerBall } from './objectGraphics';
 import type { AppModeIcon } from '../data/appModes';
 import type { HubWorldTier } from './hubWorldProgress';
+import { paintCloudRow, paintFlowers, paintGrassBand, paintHills, paintKite, paintSun, paintVerticalSky } from './comicScenery';
 
 export function drawPlaygroundSky(scene: Phaser.Scene, worldTier: HubWorldTier = 0): Phaser.GameObjects.Graphics {
   const { width, height } = scene.scale;
-  const gfx = scene.add.graphics().setDepth(0);
-  gfx.fillGradientStyle(0x9ed8ff, 0x9ed8ff, 0xc8f0a8, 0x7ec850, 1);
-  gfx.fillRect(0, 0, width, height);
+  const gfx = paintVerticalSky(scene, 0x9ed8ff, 0x7ec850);
+  paintSun(scene, width * 0.88, height * 0.12, 36);
+  paintCloudRow(scene, 46, 4);
+  paintKite(scene, width * 0.16, height * 0.22, 0xff6b6b);
+  paintHills(scene, height * 0.72);
+  paintGrassBand(scene, height * 0.68);
 
-  const sun = scene.add.circle(width * 0.88, height * 0.12, 42, COLORS.star, 0.95);
-  sun.setStrokeStyle(3, COLORS.outline, 0.25);
-  sun.setDepth(0);
-
-  for (let i = 0; i < 7; i++) {
-    const cx = (width / 8) * (i + 1);
-    const cloud = scene.add.ellipse(cx, 48 + (i % 3) * 26, 72, 34, COLORS.white, 0.9);
-    cloud.setStrokeStyle(2, COLORS.outline, 0.12);
-    cloud.setDepth(0);
-  }
+  const swing = scene.add.graphics().setDepth(0);
+  const sx = width * 0.08;
+  const sy = height * 0.58;
+  swing.lineStyle(4, 0x8b6914, 0.9);
+  swing.lineBetween(sx, sy, sx + 36, sy - 48);
+  swing.lineBetween(sx + 72, sy, sx + 36, sy - 48);
+  swing.lineBetween(sx + 18, sy - 10, sx + 18, sy + 28);
+  swing.lineBetween(sx + 54, sy - 10, sx + 54, sy + 28);
+  swing.fillStyle(0xff6b35, 1);
+  swing.fillRoundedRect(sx + 14, sy + 24, 44, 10, 4);
+  swing.lineStyle(3, COLORS.outline, 0.55);
+  swing.strokeRoundedRect(sx + 14, sy + 24, 44, 10, 4);
 
   const pathGfx = scene.add.graphics().setDepth(0);
-  pathGfx.fillStyle(0xd4b896, 0.65);
-  pathGfx.fillEllipse(width / 2, height * 0.89, width * 0.62, 44);
+  pathGfx.fillStyle(0xd4b896, 0.75);
+  pathGfx.fillEllipse(width / 2, height * 0.9, width * 0.55, 40);
   pathGfx.lineStyle(3, COLORS.outline, 0.12);
-  pathGfx.strokeEllipse(width / 2, height * 0.89, width * 0.62, 44);
+  pathGfx.strokeEllipse(width / 2, height * 0.9, width * 0.55, 40);
+  paintFlowers(scene, height * 0.8);
 
+  const bush = scene.add.graphics().setDepth(0);
   for (let i = 0; i < 4; i++) {
-    const bush = scene.add.ellipse(60 + i * (width / 4.2), height * 0.76, 70, 36, 0x5cb04a, 0.85);
-    bush.setStrokeStyle(3, COLORS.outline, 0.12);
-    bush.setDepth(0);
+    const bx = width * 0.28 + i * (width / 5.2);
+    bush.fillStyle(i % 2 === 0 ? 0x3cba5a : 0x5cb04a, 1);
+    bush.fillEllipse(bx, height * 0.74, 64, 32);
+    bush.lineStyle(2, COLORS.outline, 0.15);
+    bush.strokeEllipse(bx, height * 0.74, 64, 32);
+    bush.fillStyle(0x7ee08a, 0.45);
+    bush.fillEllipse(bx - 10, height * 0.72, 22, 12);
   }
 
   if (worldTier >= 1) {

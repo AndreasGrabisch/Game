@@ -11,6 +11,7 @@ import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { buildTreasuryStickers } from '../game/appRewardCatalog';
 import { bumpStickerTap } from '../game/appTreasury';
 import { getAppRewardSummary } from '../game/appProgress';
+import { attachTitleMark, drawRewardMark } from '../game/comicIcons';
 export class TreasureChestScene extends Phaser.Scene {
   constructor() {
     super({ key: 'TreasureChestScene' });
@@ -26,7 +27,8 @@ export class TreasureChestScene extends Phaser.Scene {
     const s = scale * (layout.portrait ? 0.88 : 1);
     const summary = getAppRewardSummary();
 
-    addComicText(this, x, y - (layout.portrait ? 248 : 228) * s, '🏆 Samuels Schatzkiste', 34 * s);
+    const treasureTitle = addComicText(this, x, y - (layout.portrait ? 248 : 228) * s, 'Samuels Schatzkiste', 30 * s);
+    attachTitleMark(this, treasureTitle, '🏆');
     this.drawSummaryBar(x, y - (layout.portrait ? 200 : 182) * s, s, layout.portrait, summary);
 
     const samuel = spawnSamuelCompanion(this, x - (layout.portrait ? 150 : 280) * s, y + (layout.portrait ? 200 : 140) * s, 0.75 * s);
@@ -78,7 +80,7 @@ export class TreasureChestScene extends Phaser.Scene {
     const panel = drawComicPanel(this, x, y, w, 54 * scale);
     panel.setDepth(1);
 
-    const line = `⭐ ${summary.totalStars}  ·  🚲 ${summary.bikeStars}  ·  🔍 ${summary.detectiveStars}  ·  📋 ${summary.dailyProgress} ${summary.dailyEmoji}`;
+    const line = `Sterne ${summary.totalStars}  ·  Rad ${summary.bikeStars}  ·  Detektiv ${summary.detectiveStars}  ·  Heute ${summary.dailyProgress}`;
     this.add
       .text(x, y, line, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
@@ -107,9 +109,8 @@ export class TreasureChestScene extends Phaser.Scene {
     bg.setStrokeStyle(4, unlocked ? COLORS.star : COLORS.outline, unlocked ? 1 : 0.4);
     bg.setDepth(3);
 
-    const icon = this.add.text(x, y - 6 * scale, emoji, {
-      fontSize: `${unlocked ? 38 : 30}px`,
-    }).setOrigin(0.5);
+    const icon = drawRewardMark(this, emoji, (unlocked ? 58 : 50) * scale, true);
+    icon.setPosition(x, y - 4 * scale);
     icon.setAlpha(unlocked ? 1 : 0.35);
     icon.setDepth(4);
 

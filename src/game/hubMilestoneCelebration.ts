@@ -4,6 +4,7 @@ import { addComicText, createComicButton, drawComicPanel, floatFeedback } from '
 import { feedbackSounds } from './feedbackAudio';
 import { playConfettiBurst } from './celebrationConfetti';
 import { celebrateMilestone, getMilestoneById, getPendingMilestones, type AppMilestone } from './appMilestones';
+import { drawRewardMark } from './comicIcons';
 
 export async function runHubMilestoneCelebrations(
   scene: Phaser.Scene,
@@ -44,7 +45,8 @@ function showMilestoneOverlay(
     const title = addComicText(scene, cx, cy - 72 * scale, 'Super!', 32 * scale);
     title.setDepth(depth + 2);
 
-    const emoji = scene.add.text(cx, cy - 18 * scale, meta.emoji, { fontSize: `${64 * scale}px` }).setOrigin(0.5);
+    const emoji = drawRewardMark(scene, meta.emoji, 72 * scale, true);
+    emoji.setPosition(cx, cy - 8 * scale);
     emoji.setDepth(depth + 2);
 
     const label = addComicText(scene, cx, cy + 42 * scale, `${meta.title}`, 22 * scale);

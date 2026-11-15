@@ -25,13 +25,19 @@ import {
 } from '../game/Progress';
 import { getBikeBuildProgressLabel } from '../game/appProgress';
 import { MISSIONS } from '../data/missions';
+import { drawCartoonBell, drawChainPartIcon, drawHandlebarPartIcon, drawWheelPartIcon } from '../game/bikeGraphics';
+import { attachTitleMark } from '../game/comicIcons';
 
-const PART_ICONS: Record<VehiclePart, string> = {
-  wheels: '🛞',
-  pedals: '⚙️',
-  handlebar: '🎯',
-  bell: '🔔',
-};
+function drawWorkshopPartIcon(
+  scene: Phaser.Scene,
+  part: VehiclePart,
+  scale: number,
+): Phaser.GameObjects.Container {
+  if (part === 'wheels') return drawWheelPartIcon(scene, scale * 0.55);
+  if (part === 'pedals') return drawChainPartIcon(scene, scale * 0.65);
+  if (part === 'handlebar') return drawHandlebarPartIcon(scene, scale * 0.4);
+  return drawCartoonBell(scene, scale * 0.5);
+}
 
 const MISSION_MAP: { id: string; part: VehiclePart; x: number; y: number }[] = [
   { id: 'mission-01-wheels', part: 'wheels', x: -200, y: -50 },
@@ -55,7 +61,8 @@ export class WorkshopScene extends Phaser.Scene {
     const layout = getDetectiveLayoutMode(this);
     const s = scale * (layout.portrait ? 0.86 : 1);
     const progress = loadProgress();
-    addComicText(this, x, y - (layout.portrait ? 248 : 220) * s, '🚲 Werkstatt', 32 * s);
+    const shopTitle = addComicText(this, x, y - (layout.portrait ? 248 : 220) * s, 'Werkstatt', 32 * s);
+    attachTitleMark(this, shopTitle, '🚲');
     addComicText(this, x, y - (layout.portrait ? 212 : 186) * s, `Ziel: ${getBikeBuildProgressLabel()}`, 20 * s);
 
     const bikeY = y + (layout.portrait ? 100 : 80) * s;
@@ -81,7 +88,7 @@ export class WorkshopScene extends Phaser.Scene {
       feedbackSounds.workshopCheer();
       reactCompanionCheer(this, this.samuelCompanion);
       playConfettiBurst(this, x, bikeY - 40 * s, s, { count: 12, emojis: ['⭐', '🚲', '✨', '🎉'] });
-      addComicText(this, x, y + (layout.portrait ? 168 : 168) * s, '✅ Fertig!', 26 * s);
+      addComicText(this, x, y + (layout.portrait ? 168 : 168) * s, 'Fertig!', 26 * s);
     }
 
     const missionLayout = layout.portrait
@@ -134,9 +141,9 @@ export class WorkshopScene extends Phaser.Scene {
     const node = this.add.circle(mx, my, radius, color);
     node.setStrokeStyle(4, COLORS.outline);
 
-    this.add
-      .text(mx, my - 6 * scale, PART_ICONS[mission.part], { fontSize: `${28 * scale}px` })
-      .setOrigin(0.5);
+    const partIcon = drawWorkshopPartIcon(this, mission.part, scale);
+    partIcon.setPosition(mx, my - 8 * scale);
+    partIcon.setAlpha(locked ? 0.4 : 1);
 
     if (!locked) {
       this.add

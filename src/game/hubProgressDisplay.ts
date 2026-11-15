@@ -6,6 +6,7 @@ import { loadDetectiveProgress } from './detectiveProgress';
 import { loadProgress } from './Progress';
 import { CORE_BIKE_MISSIONS, BIKE_MISSION_ORDER } from './kidDifficultyCurve';
 import type { AppRewardSummary } from './appProgress';
+import { drawRewardMark } from './comicIcons';
 
 export function drawHubProgressBoard(
   scene: Phaser.Scene,
@@ -21,7 +22,10 @@ export function drawHubProgressBoard(
   const panel = drawComicPanel(scene, 0, 0, w, h);
   root.add(panel);
 
-  const starText = scene.add.text(-w / 2 + 52 * scale, -h / 2 + 12 * scale, `⭐ ${summary.totalStars}`, {
+  const starMark = drawRewardMark(scene, '⭐', 26 * scale, false);
+  starMark.setPosition(-w / 2 + 28 * scale, -h / 2 + 24 * scale);
+  root.add(starMark);
+  const starText = scene.add.text(-w / 2 + 48 * scale, -h / 2 + 12 * scale, `${summary.totalStars}`, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',
     fontSize: `${22 * scale}px`,
     color: '#1a1a2e',
@@ -48,7 +52,7 @@ export function drawHubProgressBoard(
       ? portrait
         ? `Nächstes: ${bike.completedMissions.length < 3 ? 'Werkstatt' : 'Klingel'}`
         : `Nächstes Abenteuer: ${bike.completedMissions.length < CORE_BIKE_MISSIONS.length ? 'Werkstatt-Mission' : 'Bonus-Klingel'} · Detektiv ${detDone}/${DETECTIVE_CASES.length}`
-      : `Alle Kern-Teile da!${bonusBell ? ' 🔔' : ''} · Detektiv ${detDone}/${DETECTIVE_CASES.length}`;
+      : `Alle Kern-Teile da!${bonusBell ? ' Mit Klingel.' : ''} · Detektiv ${detDone}/${DETECTIVE_CASES.length}`;
 
   const cap = scene.add.text(0, h / 2 - (portrait ? 22 : 18) * scale, caption, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',
@@ -62,8 +66,8 @@ export function drawHubProgressBoard(
   root.add(cap);
 
   const dailyLine = summary.dailyDone
-    ? `📋 Heute: ✅ ${summary.dailyEmoji}`
-    : `📋 Heute: ${summary.dailyProgress} ${summary.dailyEmoji}`;
+    ? 'Heute geschafft'
+    : `Heute: ${summary.dailyProgress}`;
   const daily = scene.add.text(-w / 2 + 18 * scale, h / 2 - (portrait ? 6 : 4) * scale, dailyLine, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',
     fontSize: `${12}px`,
@@ -87,7 +91,8 @@ function drawMiniMissionTrail(
   total: number,
   bonus: boolean,
 ): void {
-  const labelText = scene.add.text(startX, y, '🚲', { fontSize: `${18 * scale}px` }).setOrigin(0, 0.5);
+  const labelText = drawRewardMark(scene, '🛞', 22 * scale, false);
+  labelText.setPosition(startX + 10 * scale, y);
   root.add(labelText);
 
   const step = 28 * scale;
@@ -98,7 +103,9 @@ function drawMiniMissionTrail(
     root.add(dot);
   }
   const bellX = startX + 36 * scale + total * step + 8 * scale;
-  const bell = scene.add.text(bellX, y, bonus ? '🔔' : '🔕', { fontSize: `${16 * scale}px` }).setOrigin(0, 0.5);
+  const bell = drawRewardMark(scene, bonus ? '🔔' : '🔒', 18 * scale, false);
+  bell.setPosition(bellX + 8 * scale, y);
+  bell.setAlpha(bonus ? 1 : 0.4);
   root.add(bell);
 }
 
@@ -110,7 +117,8 @@ function drawDetectiveCaseTrail(
   scale: number,
   det: ReturnType<typeof loadDetectiveProgress>,
 ): void {
-  const labelText = scene.add.text(startX, y, '🔍', { fontSize: `${18 * scale}px` }).setOrigin(0, 0.5);
+  const labelText = drawRewardMark(scene, '🔍', 22 * scale, false);
+  labelText.setPosition(startX + 10 * scale, y);
   root.add(labelText);
 
   const step = 34 * scale;
@@ -120,8 +128,5 @@ function drawDetectiveCaseTrail(
     const badge = scene.add.circle(cx, y, 13 * scale, complete ? 0x5b6ee1 : COLORS.white, complete ? 1 : 0.9);
     badge.setStrokeStyle(3, COLORS.outline, complete ? 1 : 0.4);
     root.add(badge);
-    const emoji = scene.add.text(cx, y, c.emoji, { fontSize: `${14 * scale}px` }).setOrigin(0.5);
-    emoji.setAlpha(complete ? 1 : 0.45);
-    root.add(emoji);
   });
 }

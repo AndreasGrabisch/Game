@@ -5,6 +5,7 @@ import { reactCompanionCheer, reactCompanionOops, spawnSamuelCompanion } from '.
 import { feedbackSounds } from '../game/feedbackAudio';
 import { drawComingSoonParkBackdrop } from '../game/sceneBackgrounds';
 import { drawSoccerBall, drawSparkleSoccerBall } from '../game/objectGraphics';
+import { attachTitleMark } from '../game/comicIcons';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { playConfettiBurst } from '../game/celebrationConfetti';
 import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
@@ -72,11 +73,12 @@ export class BallGameScene extends Phaser.Scene {
       right: x + (layout.portrait ? 150 : 220) * this.layoutScale,
     };
 
-    addComicText(this, x, y - (layout.portrait ? 248 : 228) * this.layoutScale, 'Ballspiel', 32 * this.layoutScale);
+    const ballTitle = addComicText(this, x, y - (layout.portrait ? 248 : 228) * this.layoutScale, 'Ballspiel', 32 * this.layoutScale);
+    attachTitleMark(this, ballTitle, '⚽');
     addComicText(
       this,
       x,
-      y - (layout.portrait ? 212 : 192) * this.layoutScale,
+      y - (layout.portrait ? 186 : 172) * this.layoutScale,
       '10 Punkte = Super-Runde! Glitzer-Bälle zählen doppelt.',
       16 * this.layoutScale,
     );
@@ -84,14 +86,14 @@ export class BallGameScene extends Phaser.Scene {
     this.counterText = addComicText(
       this,
       x,
-      y - (layout.portrait ? 176 : 158) * this.layoutScale,
+      y - (layout.portrait ? 150 : 136) * this.layoutScale,
       `Punkte: 0 / ${MAIN_GOAL}`,
       22 * this.layoutScale,
     );
     this.timerText = addComicText(
       this,
       x,
-      y - (layout.portrait ? 146 : 128) * this.layoutScale,
+      y - (layout.portrait ? 120 : 104) * this.layoutScale,
       `Zeit: ${ROUND_SECONDS}`,
       20 * this.layoutScale,
     );
@@ -104,24 +106,22 @@ export class BallGameScene extends Phaser.Scene {
     );
     this.streakText.setAlpha(0);
 
-    const basket = this.add.graphics();
-    basket.fillStyle(COLORS.success, 0.25);
+    const basket = this.add.graphics().setDepth(1);
+    const basketLeft = this.playBounds.left;
+    const basketW = this.playBounds.right - this.playBounds.left;
+    const basketTop = this.groundY - 18 * this.layoutScale;
+    const basketH = 34 * this.layoutScale;
+    basket.fillStyle(0xc68642, 1);
     basket.lineStyle(4 * this.layoutScale, COLORS.outline);
-    basket.fillRoundedRect(
-      this.playBounds.left,
-      this.groundY - 16 * this.layoutScale,
-      this.playBounds.right - this.playBounds.left,
-      28 * this.layoutScale,
-      10,
-    );
-    basket.strokeRoundedRect(
-      this.playBounds.left,
-      this.groundY - 16 * this.layoutScale,
-      this.playBounds.right - this.playBounds.left,
-      28 * this.layoutScale,
-      10,
-    );
-    basket.setDepth(1);
+    basket.fillRoundedRect(basketLeft, basketTop, basketW, basketH, 12);
+    basket.strokeRoundedRect(basketLeft, basketTop, basketW, basketH, 12);
+    basket.lineStyle(2 * this.layoutScale, 0x8b5a2b, 0.55);
+    for (let i = 1; i < 7; i++) {
+      const lx = basketLeft + (basketW * i) / 7;
+      basket.lineBetween(lx, basketTop + 4, lx, basketTop + basketH - 4);
+    }
+    basket.fillStyle(0xe0a85c, 1);
+    basket.fillRoundedRect(basketLeft + 8, basketTop + 4, basketW - 16, 10 * this.layoutScale, 5);
 
     this.samuelCompanion = spawnSamuelCompanion(
       this,
@@ -325,7 +325,7 @@ export class BallGameScene extends Phaser.Scene {
       onComplete: () => entry.container.destroy(),
     });
 
-    const label = entry.sparkle ? '✨ Doppelt!' : this.streak >= 5 ? 'Mega!' : 'Super!';
+    const label = entry.sparkle ? 'Doppelt!' : this.streak >= 5 ? 'Mega!' : 'Super!';
     floatFeedback(this, entry.container.x, entry.container.y - 24 * this.layoutScale, label, '#6bcb77', 20 * this.layoutScale);
   }
 

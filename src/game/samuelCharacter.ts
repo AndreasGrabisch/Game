@@ -110,6 +110,8 @@ export function buildSamuelSideCharacter(
   torso.lineStyle(line, COLORS.outline);
   torso.fillRoundedRect(-6 * s, 2 * s, 32 * s, 34 * s, 8);
   torso.strokeRoundedRect(-6 * s, 2 * s, 32 * s, 34 * s, 8);
+  torso.fillStyle(0xffffff, 0.22);
+  torso.fillEllipse(8 * s, 12 * s, 14 * s, 8 * s);
 
   const armWave = scene.add.container(22 * s, 6 * s);
   const upperArm = scene.add.graphics();
@@ -156,6 +158,8 @@ export function buildSamuelSideCharacter(
     capGfx.fillStyle(CAP_BRIM, 1);
     capGfx.fillRoundedRect(-8 * s, -12 * s, 30 * s, 6 * s, 3);
     capGfx.strokeRoundedRect(-8 * s, -12 * s, 30 * s, 6 * s, 3);
+    capGfx.fillStyle(0xffffff, 0.28);
+    capGfx.fillEllipse(2 * s, -22 * s, 14 * s, 5 * s);
     head.add(capGfx);
   } else {
     const hairTop = scene.add.ellipse(4 * s, -16 * s, 26 * s, 14 * s, HAIR);
@@ -170,7 +174,18 @@ export function buildSamuelSideCharacter(
   armBack.strokeRoundedRect(-16 * s, 8 * s, 10 * s, 20 * s, 4);
   armBack.setAngle(12);
 
-  root.add([legBack, legFront, armBack, torso, head, armWave]);
+  const shoes = scene.add.graphics();
+  shoes.fillStyle(0xf7f7f7, 1);
+  shoes.lineStyle(line * 0.7, COLORS.outline);
+  shoes.fillRoundedRect(-8 * s, 52 * s, 16 * s, 8 * s, 3);
+  shoes.strokeRoundedRect(-8 * s, 52 * s, 16 * s, 8 * s, 3);
+  shoes.fillRoundedRect(6 * s, 52 * s, 18 * s, 8 * s, 3);
+  shoes.strokeRoundedRect(6 * s, 52 * s, 18 * s, 8 * s, 3);
+  shoes.fillStyle(COLORS.bikeFrame, 1);
+  shoes.fillRoundedRect(-6 * s, 54 * s, 8 * s, 3 * s, 1);
+  shoes.fillRoundedRect(10 * s, 54 * s, 10 * s, 3 * s, 1);
+
+  root.add([legBack, legFront, shoes, armBack, torso, head, armWave]);
 
   const parts: SamuelParts = { armWave, head, face, eye, eyeShine, mouth, brows, cap: capGfx };
   root.setData('samuelParts', parts);

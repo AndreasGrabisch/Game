@@ -20,6 +20,7 @@ import { readSceneEnterStyle, runSceneEnter, transitionToHub, transitionToScene 
 import { drawDetectiveHubBackdrop } from '../game/sceneBackgrounds';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 import { spawnSamuelBuddy } from '../game/characterCompanion';
+import { attachTitleMark, drawRewardMark } from '../game/comicIcons';
 
 export class DetectiveHubScene extends Phaser.Scene {
   constructor() {
@@ -36,7 +37,8 @@ export class DetectiveHubScene extends Phaser.Scene {
     const layout = getDetectiveLayoutMode(this);
     const s = scale * layout.scaleMul;
 
-    addComicText(this, x, y - (layout.portrait ? 252 : 228) * s, '🔍 Detektiv-Fälle', 34 * s);
+    const detTitle = addComicText(this, x, y - (layout.portrait ? 252 : 228) * s, 'Detektiv-Fälle', 34 * s);
+    attachTitleMark(this, detTitle, '🔍');
     this.drawRewardsBar(x, y - (layout.portrait ? 208 : 182) * s, s, layout.portrait);
     this.drawDailyMission(x, y - (layout.portrait ? 165 : 140) * s, s, layout.portrait);
 
@@ -70,8 +72,8 @@ export class DetectiveHubScene extends Phaser.Scene {
 
     const btnY = y + (layout.portrait ? 228 : 210) * s;
     const btnW = layout.portrait ? 104 : 120;
-    createComicButton(this, x - 125 * s, btnY, '🖼️ Wand', () => transitionToScene(this, 'DetectiveWallScene', undefined, { label: 'Sticker-Wand' }), DETECTIVE_MARKER_GREEN, btnW);
-    createComicButton(this, x + 5 * s, btnY, '🔊 Vorlesen', () => void this.readHubAloud(), 0xff6b35, btnW + 12);
+    createComicButton(this, x - 125 * s, btnY, 'Wand', () => transitionToScene(this, 'DetectiveWallScene', undefined, { label: 'Sticker-Wand' }), DETECTIVE_MARKER_GREEN, btnW);
+    createComicButton(this, x + 5 * s, btnY, 'Vorlesen', () => void this.readHubAloud(), 0xff6b35, btnW + 12);
     createComicButton(this, x + 130 * s, btnY, '← Menü', () => transitionToHub(this), 0x5b6ee1, btnW);
 
     this.time.delayedCall(400, () => {
@@ -146,8 +148,8 @@ export class DetectiveHubScene extends Phaser.Scene {
     barFill.setDepth(2);
 
     const status = daily.done
-      ? `✅ Tages-Mission geschafft! ${daily.rewardEmoji}`
-      : `📋 ${daily.label} — ${daily.progress}/${daily.target}`;
+      ? 'Tages-Mission geschafft!'
+      : `${daily.label} — ${daily.progress}/${daily.target}`;
     const statusText = this.add
       .text(x, y - (portrait ? 12 : 10) * scale, status, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
@@ -161,9 +163,8 @@ export class DetectiveHubScene extends Phaser.Scene {
       .setDepth(3);
 
     if (daily.done) {
-      const sparkle = this.add.text(x + w / 2 - 22 * scale, y - h / 2 + 16 * scale, daily.rewardEmoji, {
-        fontSize: `${22 * scale}px`,
-      });
+      const sparkle = drawRewardMark(this, daily.rewardEmoji, 28 * scale, false);
+      sparkle.setPosition(x + w / 2 - 22 * scale, y - h / 2 + 16 * scale);
       sparkle.setDepth(4);
       this.tweens.add({
         targets: sparkle,
@@ -186,7 +187,7 @@ export class DetectiveHubScene extends Phaser.Scene {
     const panel = drawComicPanel(this, x, y, panelW, portrait ? 64 * scale : 58 * scale);
     panel.setDepth(1);
 
-    const starLabel = addComicText(this, x - panelW / 2 + 70 * scale, y - 4 * scale, `⭐ ${totalStars}`, 22 * scale);
+    const starLabel = addComicText(this, x - panelW / 2 + 70 * scale, y - 4 * scale, `${totalStars}`, 22 * scale);
     starLabel.setOrigin(0.5);
     if (totalStars > 0) {
       this.tweens.add({
@@ -245,11 +246,17 @@ export class DetectiveHubScene extends Phaser.Scene {
       ? `Erst ${getDetectiveCaseById(caseDef.unlockRequires)?.title ?? 'vorherigen Fall'} schaffen!`
       : '';
 
+    const shadow = this.add.rectangle(x + 4, y + 5, width, height, 0x000000, 0.1);
     const bg = this.add.rectangle(x, y, width, height, COLORS.panel);
     bg.setStrokeStyle(4, unlocked ? DETECTIVE_MARKER_GREEN : COLORS.outline);
     bg.setAlpha(unlocked ? 1 : 0.72);
+    const gloss = this.add.rectangle(x, y - height / 2 + 8 * scale, width - 16 * scale, 8 * scale, COLORS.white, 0.35);
+    void shadow;
+    void gloss;
 
-    this.add.text(x - width / 2 + 36 * scale, y, caseDef.emoji, { fontSize: `${34 * scale}px` }).setOrigin(0.5);
+    const caseIcon = drawRewardMark(this, caseDef.emoji, 36 * scale, false);
+    caseIcon.setPosition(x - width / 2 + 36 * scale, y);
+    caseIcon.setAlpha(unlocked ? 1 : 0.45);
     this.add
       .text(x - width / 2 + 76 * scale, y - 20 * scale, caseDef.title, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',

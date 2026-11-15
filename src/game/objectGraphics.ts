@@ -164,16 +164,40 @@ export function randomDecoyKind(): DecoyKind {
   return Phaser.Utils.Array.GetRandom(DECOY_ROTATION);
 }
 
+function fillPentagon(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  cy: number,
+  radius: number,
+  rotation: number,
+): void {
+  g.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = rotation + (i * Math.PI * 2) / 5 - Math.PI / 2;
+    const x = cx + Math.cos(a) * radius;
+    const y = cy + Math.sin(a) * radius;
+    if (i === 0) g.moveTo(x, y);
+    else g.lineTo(x, y);
+  }
+  g.closePath();
+  g.fillPath();
+}
+
 export function drawSoccerBall(scene: Phaser.Scene, radius: number): Phaser.GameObjects.Container {
   const ball = scene.add.container(0, 0);
-  const base = scene.add.circle(0, 0, radius, COLORS.white);
-  base.setStrokeStyle(Math.max(3, radius * 0.12), COLORS.outline);
-  const patch = scene.add.graphics();
-  patch.fillStyle(0x222222, 0.35);
-  patch.fillCircle(-radius * 0.35, -radius * 0.12, radius * 0.28);
-  patch.fillCircle(radius * 0.22, radius * 0.3, radius * 0.22);
-  const shine = scene.add.circle(-radius * 0.28, -radius * 0.32, radius * 0.14, COLORS.white, 0.55);
-  ball.add([base, patch, shine]);
+  const g = scene.add.graphics();
+  g.fillStyle(0xf7f9fc, 1);
+  g.fillCircle(0, 0, radius);
+  g.lineStyle(Math.max(3, radius * 0.09), COLORS.outline);
+  g.strokeCircle(0, 0, radius);
+  g.fillStyle(0x1a1a2e, 1);
+  fillPentagon(g, 0, 0, radius * 0.26, 0);
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    fillPentagon(g, Math.cos(a) * radius * 0.52, Math.sin(a) * radius * 0.52, radius * 0.16, a + 0.4);
+  }
+  const shine = scene.add.ellipse(-radius * 0.32, -radius * 0.34, radius * 0.38, radius * 0.22, COLORS.white, 0.55);
+  ball.add([g, shine]);
   return ball;
 }
 

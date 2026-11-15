@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants';
 import { addComicText, createComicButton, drawStar, floatFeedback } from '../game/graphics';
+import { attachTitleMark } from '../game/comicIcons';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { starsForMistakes } from '../game/scoring';
 import { getGameCenter } from './BootScene';
@@ -111,11 +112,12 @@ export class ColorSortScene extends Phaser.Scene {
     );
 
     const titleY = layout.portrait ? y - 252 * this.layoutScale : y - 236 * scale;
-    addComicText(this, x, titleY, '🎨 Farben', 32 * this.layoutScale);
+    const colorTitle = addComicText(this, x, titleY, 'Farben', 32 * this.layoutScale);
+    attachTitleMark(this, colorTitle, '🎨');
     this.drawGoalIcons(x, titleY + 38 * this.layoutScale, this.layoutScale);
     const best = loadBest();
     if (best > 0) {
-      addComicText(this, x, titleY + 70 * this.layoutScale, `⭐ Best: ${best}`, 16 * this.layoutScale);
+      addComicText(this, x, titleY + 70 * this.layoutScale, `Best: ${best}`, 16 * this.layoutScale);
     }
     this.counterText = addComicText(this, x, titleY + (best > 0 ? 94 : 72) * this.layoutScale, '0 / 4', 20 * this.layoutScale);
 
@@ -181,6 +183,7 @@ export class ColorSortScene extends Phaser.Scene {
 
       const body = this.add.rectangle(0, 12 * scale, (portrait ? 118 : 128) * scale, 72 * scale, def.tint);
       body.setStrokeStyle(3 * scale, COLORS.outline);
+      const shine = this.add.rectangle(0, -8 * scale, (portrait ? 90 : 100) * scale, 12 * scale, COLORS.white, 0.28);
       const rim = this.add.rectangle(0, -28 * scale, 140 * scale, 16 * scale, def.tint);
       rim.setStrokeStyle(3 * scale, COLORS.outline);
       const icon = this.add.circle(-42 * scale, -8 * scale, 12 * scale, COLORS.white, 0.35);
@@ -204,7 +207,7 @@ export class ColorSortScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      bucket.add([body, rim, icon, label, countText, hit]);
+      bucket.add([body, shine, rim, icon, label, countText, hit]);
       hit.on('pointerdown', () => this.onBucketChosen(def.id));
 
       this.buckets.push({ id: def.id, x, y: bucketY, countText, count: 0 });

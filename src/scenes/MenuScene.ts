@@ -40,8 +40,10 @@ export class MenuScene extends Phaser.Scene {
 
     const muteBtn = createComicButton(this, x - 150 * scale, y + 130 * scale, getMuteButtonLabel(), () => {
       toggleGameAudio();
-      const label = muteBtn.list[1] as Phaser.GameObjects.Text;
-      label.setText(getMuteButtonLabel());
+      const label = muteBtn.list.find((child) => (child as Phaser.GameObjects.GameObject).type === 'Text') as
+        | Phaser.GameObjects.Text
+        | undefined;
+      label?.setText(getMuteButtonLabel());
     }, 0x6bcb77, 120);
     void muteBtn;
     createComicButton(this, x + 110 * scale, y + 130 * scale, 'Zurück', () => transitionToHub(this), 0x5b6ee1, 150);

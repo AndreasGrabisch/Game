@@ -129,6 +129,8 @@ export function paintBicycleSideProfile(
   frameGfx.lineStyle(tube * 0.65, COLORS.outline, frameAlpha);
   frameGfx.fillRoundedRect((g.seatX - 14) * s, (g.seatY - 2) * s, 28 * s, 11 * s, 5);
   frameGfx.strokeRoundedRect((g.seatX - 14) * s, (g.seatY - 2) * s, 28 * s, 11 * s, 5);
+  frameGfx.fillStyle(0xffffff, frameAlpha * 0.28);
+  frameGfx.fillEllipse((g.seatX - 2) * s, (g.seatY + 1) * s, 16 * s, 4 * s);
 
   parent.add(frameGfx);
 
@@ -308,7 +310,12 @@ export function drawCartoonWheel(
   const hub = scene.add.circle(0, 0, radius * 0.14, 0x888888, alpha);
   hub.setStrokeStyle(2, COLORS.outline, alpha);
   const shine = scene.add.circle(-radius * 0.22, -radius * 0.22, radius * 0.12, COLORS.white, 0.35 * alpha);
-  container.add([shadow, tire, rim, spokes, hub, shine]);
+  const rimShine = scene.add.graphics();
+  rimShine.lineStyle(Math.max(2, radius * 0.07), 0xffffff, 0.4 * alpha);
+  rimShine.beginPath();
+  rimShine.arc(0, 0, radius * 0.78, -2.5, -0.6, false);
+  rimShine.strokePath();
+  container.add([shadow, tire, rim, spokes, hub, shine, rimShine]);
   return container;
 }
 

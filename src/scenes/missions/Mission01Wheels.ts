@@ -71,8 +71,8 @@ export class Mission01Wheels extends Phaser.Scene {
 
     createComicButton(
       this,
-      x + 220 * scale,
-      y - 200 * scale,
+      x + 300 * scale,
+      y - 248 * scale,
       'Zurück',
       () => {
         hideSpeech();

@@ -52,7 +52,7 @@ export class HubScene extends Phaser.Scene {
       this,
       x + (layout.portrait ? 0 : 280) * s,
       y - (layout.portrait ? 248 : 228) * s,
-      '🏆 Schatz',
+      'Schatz',
       () => transitionToScene(this, 'TreasureChestScene'),
       COLORS.star,
       layout.portrait ? 130 : 150,
@@ -94,11 +94,13 @@ export class HubScene extends Phaser.Scene {
     const btnY = y + (layout.portrait ? 248 : 228) * s;
     const muteBtn = createComicButton(this, x - 155 * s, btnY, getMuteButtonLabel(), () => {
       toggleGameAudio();
-      const label = muteBtn.list[1] as Phaser.GameObjects.Text;
-      label.setText(getMuteButtonLabel());
+      const label = muteBtn.list.find((child) => (child as Phaser.GameObjects.GameObject).type === 'Text') as
+        | Phaser.GameObjects.Text
+        | undefined;
+      label?.setText(getMuteButtonLabel());
     }, 0x6bcb77, 100);
     void muteBtn;
-    createComicButton(this, x - 35 * s, btnY, '🔊 Vorlesen', () => void this.readHomeAloud(), 0xff6b35, 110);
+    createComicButton(this, x - 35 * s, btnY, 'Vorlesen', () => void this.readHomeAloud(), 0xff6b35, 110);
     createComicButton(this, x + 110 * s, btnY, 'Neu starten', () => {
       transitionToScene(this, 'MenuScene');
     }, 0x888899, 120);
@@ -161,8 +163,8 @@ export class HubScene extends Phaser.Scene {
       3,
     ).setAlpha(unlocked ? 1 : 0.55);
 
-    const icon = drawModeIcon(this, mode.icon, 0.55 * scale);
-    icon.setPosition(0, -height / 2 + 26 * scale);
+    const icon = drawModeIcon(this, mode.icon, (portrait ? 1.05 : 1.25) * scale);
+    icon.setPosition(0, portrait ? -6 * scale : -6 * scale);
     container.add(icon);
 
     const title = this.add

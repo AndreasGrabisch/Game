@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
+import { COLORS } from './constants';
 import { drawStar } from './graphics';
+
+const CONFETTI_COLORS = [0xff6b6b, 0xffd93d, 0x6bcb77, 0x5b6ee1, 0xff6b35];
 
 const DEFAULT_EMOJIS = ['⭐', '✨', '🎉', '💫', '🌟'];
 
@@ -43,10 +46,10 @@ export function playConfettiBurst(
       continue;
     }
 
-    const p = scene.add
-      .text(px, py, emojis[i % emojis.length], { fontSize: `${20 + (i % 3) * 4}px` })
-      .setOrigin(0.5)
-      .setDepth(depth);
+    const p = scene.add.circle(px, py, (6 + (i % 3) * 2) * scale, CONFETTI_COLORS[i % CONFETTI_COLORS.length]);
+    p.setStrokeStyle(2, COLORS.outline);
+    p.setDepth(depth);
+    void emojis;
 
     scene.tweens.add({
       targets: p,

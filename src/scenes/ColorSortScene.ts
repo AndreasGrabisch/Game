@@ -8,7 +8,8 @@ import { reactCompanionCheer, reactCompanionOops, spawnSamuelCompanion } from '.
 import { drawColorSortBackdrop } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn } from '../game/sceneTransition';
+import { playConfettiBurst } from '../game/celebrationConfetti';
+import { readSceneEnterStyle, runSceneEnter, transitionToHub } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 type ColorId = 'rot' | 'blau' | 'gelb' | 'gruen';
@@ -94,7 +95,7 @@ export class ColorSortScene extends Phaser.Scene {
     this.hintShown = false;
     this.finished = false;
 
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'colors');
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
@@ -131,7 +132,7 @@ export class ColorSortScene extends Phaser.Scene {
       '←',
       () => {
         hideSpeech();
-        this.scene.start('HubScene');
+        transitionToHub(this);
       },
       0x5b6ee1,
       layout.portrait ? 72 : 100,
@@ -394,6 +395,7 @@ export class ColorSortScene extends Phaser.Scene {
     feedbackSounds.success();
 
     const { x, y, scale } = getGameCenter(this);
+    playConfettiBurst(this, x, y - 40 * scale, scale, { count: 14 });
     for (let i = 0; i < 3; i++) {
       const star = drawStar(this, x - 50 * scale + i * 50 * scale, y - 20 * scale, 18 * scale, i < earned);
       star.setDepth(20);
@@ -422,7 +424,7 @@ export class ColorSortScene extends Phaser.Scene {
     }, 0x6bcb77, 160).setDepth(20);
 
     createComicButton(this, x + 120 * scale, y + 96 * scale, 'Alle Spiele', () => {
-      this.scene.start('HubScene');
+      transitionToHub(this);
     }, 0x5b6ee1, 180).setDepth(20);
   }
 }

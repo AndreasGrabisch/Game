@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../game/constants';
+import { launchInitialHub } from '../game/sceneTransition';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -12,7 +13,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     this.scale.on('resize', this.resize, this);
-    this.scene.start('HubScene');
+    launchInitialHub(this);
   }
 
   private resize(gameSize: Phaser.Structs.Size): void {

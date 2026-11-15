@@ -10,7 +10,8 @@ import { bindSceneMusic } from '../game/sceneMusic';
 import { spawnSamuelCompanion, reactCompanionCheer } from '../game/characterCompanion';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { recordRideCompletion } from '../game/appTreasury';
-import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { playConfettiBurst } from '../game/celebrationConfetti';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 interface Prop {
@@ -52,7 +53,7 @@ export class RideScene extends Phaser.Scene {
 
   create(): void {
     if (!isPartUnlocked('wheels') || !isPartUnlocked('pedals') || !isPartUnlocked('handlebar')) {
-      this.scene.start('WorkshopScene');
+      transitionToScene(this, 'WorkshopScene');
       return;
     }
 
@@ -64,7 +65,7 @@ export class RideScene extends Phaser.Scene {
     this.props = [];
     this.markers = [];
 
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this));
     bindSceneMusic(this, 'ride');
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);
@@ -343,24 +344,7 @@ export class RideScene extends Phaser.Scene {
     const { x, y, scale } = getGameCenter(this);
     const earned = starsForMistakes(this.hits);
 
-    for (let i = 0; i < 14; i++) {
-      const star = drawStar(
-        this,
-        x + Phaser.Math.Between(-260, 260) * scale,
-        y - 80 * scale,
-        (10 + (i % 3) * 4) * scale,
-      );
-      star.setDepth(30);
-      this.tweens.add({
-        targets: star,
-        y: star.y + Phaser.Math.Between(50, 140) * scale,
-        alpha: 0,
-        angle: 160,
-        duration: 900,
-        delay: i * 35,
-        onComplete: () => star.destroy(),
-      });
-    }
+    playConfettiBurst(this, x, y - 60 * scale, scale, { count: 16, mixStars: true });
 
     for (let i = 0; i < 3; i++) {
       const star = drawStar(this, x - 50 * scale + i * 50 * scale, y - 150 * scale, 18 * scale, i < earned);
@@ -383,7 +367,7 @@ export class RideScene extends Phaser.Scene {
     const continued = await showSpeechIf(this, line);
     if (!continued) return;
     createComicButton(this, x, y + 200 * scale, 'Zur Werkstatt!', () => {
-      this.scene.start('WorkshopScene');
+      transitionToScene(this, 'WorkshopScene');
     }).setDepth(32);
   }
 }

@@ -16,6 +16,7 @@ import {
 } from '../game/detectiveProgress';
 import { DETECTIVE_MARKER_GREEN } from '../game/detectiveSamuel';
 import { bindSceneMusic } from '../game/sceneMusic';
+import { readSceneEnterStyle, runSceneEnter, transitionToHub, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 export class DetectiveHubScene extends Phaser.Scene {
@@ -26,6 +27,7 @@ export class DetectiveHubScene extends Phaser.Scene {
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
     bindSceneMusic(this, 'detective');
+    runSceneEnter(this, readSceneEnterStyle(this));
 
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
@@ -71,9 +73,9 @@ export class DetectiveHubScene extends Phaser.Scene {
 
     const btnY = y + (layout.portrait ? 228 : 210) * s;
     const btnW = layout.portrait ? 104 : 120;
-    createComicButton(this, x - 125 * s, btnY, '🖼️ Wand', () => this.scene.start('DetectiveWallScene'), DETECTIVE_MARKER_GREEN, btnW);
+    createComicButton(this, x - 125 * s, btnY, '🖼️ Wand', () => transitionToScene(this, 'DetectiveWallScene', undefined, { label: 'Sticker-Wand' }), DETECTIVE_MARKER_GREEN, btnW);
     createComicButton(this, x + 5 * s, btnY, '🔊 Vorlesen', () => void this.readHubAloud(), 0xff6b35, btnW + 12);
-    createComicButton(this, x + 130 * s, btnY, '← Menü', () => this.scene.start('HubScene'), 0x5b6ee1, btnW);
+    createComicButton(this, x + 130 * s, btnY, '← Menü', () => transitionToHub(this), 0x5b6ee1, btnW);
 
     this.time.delayedCall(400, () => {
       if (!this.scene.isActive()) return;
@@ -311,7 +313,7 @@ export class DetectiveHubScene extends Phaser.Scene {
       btnLabel,
       () => {
         if (!unlocked) return;
-        this.scene.start('DetectiveCabinetScene', { caseId: caseDef.id });
+        transitionToScene(this, 'DetectiveCabinetScene', { caseId: caseDef.id }, { label: 'Fall starten!' });
       },
       unlocked ? DETECTIVE_MARKER_GREEN : 0x888899,
       100,

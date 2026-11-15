@@ -6,6 +6,8 @@ import { starsForMistakes } from '../../game/scoring';
 import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
+import { playConfettiBurst } from '../../game/celebrationConfetti';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 import { getDetectiveLayoutMode } from '../../game/detectiveLayout';
 
@@ -28,6 +30,7 @@ export class Mission04Bell extends Phaser.Scene {
     this.mistakes = 0;
     this.activeBell = undefined;
 
+    runSceneEnter(this, readSceneEnterStyle(this));
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     const layout = getDetectiveLayoutMode(this);
@@ -51,7 +54,7 @@ export class Mission04Bell extends Phaser.Scene {
       '←',
       () => {
         hideSpeech();
-        this.scene.start('WorkshopScene');
+        transitionToScene(this, 'WorkshopScene', undefined, { label: 'Werkstatt' });
       },
       0x5b6ee1,
       layout.portrait ? 72 : 100,
@@ -169,7 +172,8 @@ export class Mission04Bell extends Phaser.Scene {
     feedbackSounds.workshopCheer();
     if (!(await showSpeechIf(this, this.missionData.success))) return;
 
-    createComicButton(this, x, y + 200 * scale, 'Zur Werkstatt!', () => this.scene.start('WorkshopScene'));
+    playConfettiBurst(this, x, y - 80 * scale, scale, { count: 12 });
+    createComicButton(this, x, y + 200 * scale, 'Zur Werkstatt!', () => transitionToScene(this, 'WorkshopScene', undefined, { label: 'Werkstatt' }));
   }
 
   private drawBackground(): void {

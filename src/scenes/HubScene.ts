@@ -13,7 +13,8 @@ import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { getMuteButtonLabel, toggleGameAudio } from '../game/audioUi';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { bindSceneMusic } from '../game/sceneMusic';
-import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
+import { playConfettiBurst } from '../game/celebrationConfetti';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 export class HubScene extends Phaser.Scene {
@@ -23,7 +24,7 @@ export class HubScene extends Phaser.Scene {
 
   create(): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => hideSpeech());
-    runSceneFadeIn(this);
+    runSceneEnter(this, readSceneEnterStyle(this), 320);
     bindSceneMusic(this, 'home');
 
     drawPlaygroundSky(this, getHubWorldTier());
@@ -109,7 +110,9 @@ export class HubScene extends Phaser.Scene {
 
     this.time.delayedCall(900, () => {
       if (this.scene.isActive()) {
-        void runHubMilestoneCelebrations(this, x, y, s);
+        void runHubMilestoneCelebrations(this, x, y, s).then((celebrated) => {
+          if (celebrated > 0) playConfettiBurst(this, x, y - 40 * s, s, { count: 12 });
+        });
       }
     });
   }

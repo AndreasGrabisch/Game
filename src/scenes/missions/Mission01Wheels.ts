@@ -12,6 +12,7 @@ import {
 import { getGameCenter } from '../BootScene';
 import { completeMission, unlockPart } from '../../game/Progress';
 import { MISSIONS } from '../../data/missions';
+import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../../ui/speech';
 
 interface DraggableWheel {
@@ -41,6 +42,7 @@ export class Mission01Wheels extends Phaser.Scene {
     this.failCount = 0;
     this.wheels = [];
 
+    runSceneEnter(this, readSceneEnterStyle(this));
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
 
@@ -73,7 +75,7 @@ export class Mission01Wheels extends Phaser.Scene {
       'Zurück',
       () => {
         hideSpeech();
-        this.scene.start('WorkshopScene');
+        transitionToScene(this, 'WorkshopScene', undefined, { label: 'Werkstatt' });
       },
       0x5b6ee1,
     );
@@ -253,7 +255,7 @@ export class Mission01Wheels extends Phaser.Scene {
     if (!(await showSpeechIf(this, this.missionData.success))) return;
 
     createComicButton(this, x, y + 200 * scale, 'Zur Werkstatt!', () => {
-      this.scene.start('WorkshopScene');
+      transitionToScene(this, 'WorkshopScene', undefined, { label: 'Werkstatt' });
     });
   }
 

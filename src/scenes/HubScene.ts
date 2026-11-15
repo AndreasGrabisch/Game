@@ -3,7 +3,8 @@ import { COLORS } from '../game/constants';
 import { drawSamuel, addComicText, createComicButton } from '../game/graphics';
 import { getGameCenter } from './BootScene';
 import { APP_HOME_MODES, type AppHomeMode } from '../data/appModes';
-import { getAppTotalStars } from '../game/appProgress';
+import { getAppRewardSummary, getAppTotalStars } from '../game/appProgress';
+import { runHubMilestoneCelebrations } from '../game/hubMilestoneCelebration';
 import { drawHomeTitleBadge, drawModeIcon, drawPlaygroundSky } from '../game/appHomeGraphics';
 import { drawHubProgressBoard } from '../game/hubProgressDisplay';
 import { getHubWorldTier } from '../game/hubWorldProgress';
@@ -34,7 +35,18 @@ export class HubScene extends Phaser.Scene {
     addComicText(this, x, y - (layout.portrait ? 252 : 228) * s, 'Samuels Spielewelt', 36 * s);
     addComicText(this, x, y - (layout.portrait ? 216 : 194) * s, 'Wähle dein Abenteuer!', 18 * s);
 
-    drawHubProgressBoard(this, x, y - (layout.portrait ? 188 : 162) * s, s, layout.portrait, getAppTotalStars());
+    const summary = getAppRewardSummary();
+    drawHubProgressBoard(this, x, y - (layout.portrait ? 188 : 162) * s, s, layout.portrait, summary);
+
+    createComicButton(
+      this,
+      x + (layout.portrait ? 0 : 280) * s,
+      y - (layout.portrait ? 248 : 228) * s,
+      '🏆 Schatz',
+      () => transitionToScene(this, 'TreasureChestScene'),
+      COLORS.star,
+      layout.portrait ? 130 : 150,
+    ).setDepth(5);
 
     const samuel = drawSamuel(this, x - (layout.portrait ? 150 : 320) * s, y + (layout.portrait ? 200 : 120) * s, 0.9 * s);
     samuel.setDepth(2);
@@ -91,7 +103,13 @@ export class HubScene extends Phaser.Scene {
 
     this.time.delayedCall(500, () => {
       if (this.scene.isActive()) {
-        void showSpeechIf(this, 'Hallo! Oben siehst du Fahrrad- und Detektiv-Fortschritt. Die Bonus-Welt leuchtet nach der Klingel!');
+        void showSpeechIf(this, 'Hallo! Tippe 🏆 Schatz für Sticker aus allen Spielen!');
+      }
+    });
+
+    this.time.delayedCall(900, () => {
+      if (this.scene.isActive()) {
+        void runHubMilestoneCelebrations(this, x, y, s);
       }
     });
   }

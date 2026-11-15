@@ -2,6 +2,8 @@
 
 Eine kindgerechte 2D-Browserspiel-Sammlung für Kinder ab ca. 6 Jahren.
 
+**Für Eltern:** *Samuels Spielewelt* läuft im Browser (ohne Anmeldung): Kinder wählen auf dem Spielplatz-Hub kleine Spiele mit großen Buttons — Fahrrad basteln, Detektivfälle, Farben sortieren, kurze Probefahrt. Fortschritt und Sterne bleiben nur auf dem Gerät gespeichert (`localStorage`); mit „Neu starten“ im Menü kann alles zurückgesetzt werden. Ton lässt sich stummschalten, Texte können vorgelesen werden. Ideal für kurze Spielrunden (einige Minuten) auf Handy oder Tablet, Hoch- und Querformat.
+
 Über die **Spiele-Auswahl** startest du einzelne Minispiele:
 
 - **Samuel baut sein Fahrrad** — Missionen, Werkstatt und Probefahrt
@@ -55,7 +57,10 @@ npm run preview
 | 1 | Runde Räder | ✅ Spielbar |
 | 2 | Pedale & Kette | ✅ Spielbar |
 | 3 | Lenker | ✅ Spielbar |
-| — | Probefahrt | ✅ Nach allen Missionen |
+| 4 | Klingel (Bonus) | ✅ Spielbar |
+| — | Probefahrt | ✅ Nach 3 Kern-Teilen |
+| — | Schatzkiste & Sterne | ✅ Hub |
+| — | Detektiv (3 Fälle) | ✅ Spielbar |
 
 ## Technik
 

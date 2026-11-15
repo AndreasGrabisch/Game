@@ -23,10 +23,10 @@ export const MINIGAMES: MinigameDefinition[] = [
   {
     id: 'detective',
     title: 'Detektivspiel',
-    tagline: 'Finde deine Sachen im Schrank',
+    tagline: 'Zwei Fälle — Sterne & Sticker sammeln',
     emoji: '🔍',
     status: 'available',
-    sceneKey: 'DetectiveCabinetScene',
+    sceneKey: 'DetectiveHubScene',
     accentColor: 0x5b6ee1,
   },
   {

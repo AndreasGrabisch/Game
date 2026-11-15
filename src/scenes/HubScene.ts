@@ -18,6 +18,13 @@ import { bindSceneMusic } from '../game/sceneMusic';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
 import { playConfettiBurst } from '../game/celebrationConfetti';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
+import {
+  hasSeenHubOnboardingV2,
+  HUB_WELCOME_NEW,
+  HUB_WELCOME_RETURN,
+  markHubOnboardingV2Seen,
+} from '../game/hubOnboarding';
+import { kidFontSize } from '../game/kidTypography';
 
 export class HubScene extends Phaser.Scene {
   constructor() {
@@ -36,7 +43,7 @@ export class HubScene extends Phaser.Scene {
 
     drawHomeTitleBadge(this, x, y - (layout.portrait ? 252 : 228) * s, s);
     addComicText(this, x, y - (layout.portrait ? 252 : 228) * s, 'Samuels Spielewelt', 36 * s);
-    addComicText(this, x, y - (layout.portrait ? 216 : 194) * s, 'Wähle dein Abenteuer!', 18 * s);
+    addComicText(this, x, y - (layout.portrait ? 216 : 194) * s, 'Tippe eine Kachel — große Knöpfe!', 19 * s);
 
     const summary = getAppRewardSummary();
     drawHubProgressBoard(this, x, y - (layout.portrait ? 188 : 162) * s, s, layout.portrait, summary);
@@ -102,9 +109,12 @@ export class HubScene extends Phaser.Scene {
     });
 
     this.time.delayedCall(500, () => {
-      if (this.scene.isActive()) {
-        void showSpeechIf(this, 'Hallo! Tippe 🏆 Schatz für Sticker aus allen Spielen!');
-      }
+      if (!this.scene.isActive()) return;
+      const firstVisit = !hasSeenHubOnboardingV2();
+      const line = firstVisit ? HUB_WELCOME_NEW : HUB_WELCOME_RETURN;
+      void showSpeechIf(this, line).then((continued) => {
+        if (continued && firstVisit) markHubOnboardingV2Seen();
+      });
     });
 
     this.time.delayedCall(900, () => {
@@ -158,8 +168,8 @@ export class HubScene extends Phaser.Scene {
     const title = this.add
       .text(0, -height / 2 + 62 * scale, mode.title, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${16 * scale}px`,
-        color: '#1a1a2e',
+        fontSize: `${Math.round(kidFontSize(17) * scale)}px`,
+        color: '#141428',
         fontStyle: 'bold',
         align: 'center',
         wordWrap: { width: width - 20 * scale },
@@ -169,8 +179,8 @@ export class HubScene extends Phaser.Scene {
     const tag = this.add
       .text(0, height / 2 - 78 * scale, unlocked ? mode.shortKidLine : mode.lockHint, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${13 * scale}px`,
-        color: unlocked ? '#444466' : '#886666',
+        fontSize: `${Math.round(kidFontSize(14) * scale)}px`,
+        color: unlocked ? '#2d2d44' : '#7a5050',
         align: 'center',
         wordWrap: { width: width - 24 * scale },
       })

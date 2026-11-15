@@ -10,6 +10,7 @@ import {
   getDetectiveStarsTotal,
 } from '../game/appProgress';
 import { drawHomeTitleBadge, drawModeIcon, drawPlaygroundSky } from '../game/appHomeGraphics';
+import { drawLockIcon } from '../game/sceneBackgrounds';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { runSceneFadeIn, transitionToScene } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
@@ -170,7 +171,8 @@ export class HubScene extends Phaser.Scene {
     container.add([title, tag]);
 
     if (!unlocked) {
-      const lock = this.add.text(0, 0, '🔒', { fontSize: `${32 * scale}px` }).setOrigin(0.5).setAlpha(0.85);
+      const lock = drawLockIcon(this, 0, -8 * scale, scale);
+      lock.setAlpha(0.92);
       container.add(lock);
     }
 
@@ -178,7 +180,7 @@ export class HubScene extends Phaser.Scene {
       this,
       x,
       y + height / 2 - 32 * scale,
-      unlocked ? 'Los!' : '🔒',
+      unlocked ? 'Los!' : 'Sperre',
       () => {
         if (!unlocked) {
           void showSpeechIf(this, mode.lockHint);

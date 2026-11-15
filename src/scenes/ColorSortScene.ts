@@ -4,6 +4,10 @@ import { addComicText, createComicButton, drawStar, floatFeedback } from '../gam
 import { feedbackSounds } from '../game/feedbackAudio';
 import { starsForMistakes } from '../game/scoring';
 import { getGameCenter } from './BootScene';
+import { spawnSamuelCompanion } from '../game/characterCompanion';
+import { drawColorSortBackdrop } from '../game/sceneBackgrounds';
+import { getDetectiveLayoutMode } from '../game/detectiveLayout';
+import { runSceneFadeIn } from '../game/sceneTransition';
 import { hideSpeech, showSpeechIf } from '../ui/speech';
 
 type ColorId = 'rot' | 'blau' | 'gelb' | 'gruen';
@@ -88,9 +92,18 @@ export class ColorSortScene extends Phaser.Scene {
     this.hintShown = false;
     this.finished = false;
 
+    runSceneFadeIn(this);
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
-    this.layoutScale = scale;
+    const layout = getDetectiveLayoutMode(this);
+    this.layoutScale = scale * (layout.portrait ? 0.85 : 1);
+
+    spawnSamuelCompanion(
+      this,
+      x - (layout.portrait ? 150 : 340) * this.layoutScale,
+      y + (layout.portrait ? 210 : 120) * this.layoutScale,
+      0.85 * this.layoutScale,
+    );
 
     addComicText(this, x, y - 236 * scale, 'Farben sortieren', 34 * scale);
     const best = loadBest();
@@ -135,9 +148,7 @@ export class ColorSortScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const { width, height } = this.scale;
-    this.add.rectangle(width / 2, height / 2, width, height, COLORS.sky);
-    this.add.rectangle(width / 2, height * 0.84, width, height * 0.36, COLORS.grass);
+    drawColorSortBackdrop(this);
   }
 
   private createBuckets(centerX: number, y: number, scale: number): void {
@@ -150,6 +161,8 @@ export class ColorSortScene extends Phaser.Scene {
       body.setStrokeStyle(3 * scale, COLORS.outline);
       const rim = this.add.rectangle(0, -28 * scale, 140 * scale, 16 * scale, def.tint);
       rim.setStrokeStyle(3 * scale, COLORS.outline);
+      const icon = this.add.circle(-42 * scale, -8 * scale, 12 * scale, COLORS.white, 0.35);
+      icon.setStrokeStyle(2 * scale, def.tint);
       const hit = this.add.rectangle(0, 4 * scale, 140 * scale, 108 * scale, 0xffffff, 0.001);
       hit.setInteractive({ useHandCursor: true });
       const label = this.add
@@ -169,7 +182,7 @@ export class ColorSortScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      bucket.add([body, rim, label, countText, hit]);
+      bucket.add([body, rim, icon, label, countText, hit]);
       hit.on('pointerdown', () => this.onBucketChosen(def.id));
 
       this.buckets.push({ id: def.id, x, y, countText, count: 0 });

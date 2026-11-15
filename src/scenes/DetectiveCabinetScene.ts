@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants';
-import { addComicText, createComicButton, drawComicPanel } from '../game/graphics';
+import { addComicText, createComicButton, drawComicPanel, drawStar, floatFeedback } from '../game/graphics';
+import { hideSpeech, showSpeechIf } from '../ui/speech';
 import { getGameCenter } from './BootScene';
 import {
   DECOY_ITEMS,
@@ -60,6 +61,11 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   private hintText?: Phaser.GameObjects.Text;
   private samuel?: Phaser.GameObjects.Container;
   private samuelBase = { x: 0, y: 0 };
+  private progressText?: Phaser.GameObjects.Text;
+  private decoyCount = 0;
+  private hintShown = false;
+  private hintPulseTween?: Phaser.Tweens.Tween;
+  private hintButton?: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: 'DetectiveCabinetScene' });
@@ -76,13 +82,18 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.backpackSlots = [];
     this.inputLocked = false;
     this.hintText = undefined;
+    this.progressText = undefined;
+    this.decoyCount = 0;
+    this.hintShown = false;
+    this.hintPulseTween = undefined;
+    this.hintButton = undefined;
 
     this.drawBackground();
     const { x, y, scale } = getGameCenter(this);
     this.layoutScale = scale;
 
-    addComicText(this, x + 40 * scale, y - 230 * scale, 'Samuels Detektiv-Schrank', 32 * scale);
-    addComicText(this, x + 40 * scale, y - 195 * scale, 'Finde alle Detektiv-Sachen!', 18 * scale);
+    addComicText(this, x + 40 * scale, y - 230 * scale, '🔍 Detektiv-Schrank', 30 * scale);
+    this.progressText = addComicText(this, x + 40 * scale, y - 195 * scale, '⭐ 0 von 5', 24 * scale);
 
     this.drawerW = 108 * scale;
     this.drawerH = 88 * scale;
@@ -98,6 +109,23 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.createDrawerViews();
     this.createBackpackPanel(x + 300 * scale, y - 20 * scale, scale);
     this.createFooterButtons(x, y + 220 * scale, scale);
+    this.hintButton = createComicButton(
+      this,
+      x + 300 * scale,
+      y - 200 * scale,
+      '💡 Hilfe',
+      () => this.giveHint(),
+      DETECTIVE_MARKER_GREEN,
+      160,
+    );
+    this.hintButton.setDepth(12);
+    this.hintButton.setAlpha(0.35);
+    this.hintButton.setVisible(false);
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      hideSpeech();
+      this.hintPulseTween?.stop();
+    });
 
     this.inputLocked = true;
     this.showIntro(x, y, scale);
@@ -112,7 +140,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     introSamuel.setDepth(61);
 
     const introLine = this.add
-      .text(x + 70 * scale, y - 70 * scale, 'ICH SUCHE MEINE\nDETEKTIV SACHEN', {
+      .text(x + 70 * scale, y - 70 * scale, '🔍\nFinde 5 Sachen!', {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
         fontSize: `${34 * scale}px`,
         color: '#1a1a2e',
@@ -137,6 +165,10 @@ export class DetectiveCabinetScene extends Phaser.Scene {
           introSamuel.destroy(true);
           introLine.destroy();
           this.inputLocked = false;
+          void showSpeechIf(
+            this,
+            'Tippe eine Schublade an! Suche die fünf Detektiv-Sachen mit Lupe, Lampe und Kreide.',
+          );
         },
       });
     }, DETECTIVE_MARKER_GREEN);
@@ -238,71 +270,68 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     void detectiveSounds.unlock();
     this.reactSamuel('peek');
     this.animateDrawerOpen(view, () => {
-      this.showItemReveal(view.model.itemId as DetectiveGearId | DecoyId, view.model.isDetective, () => {
-        if (view.model.isDetective) {
-          this.handleDetectiveFind(view);
-        } else {
-          this.handleDecoy(view);
-        }
-      });
+      if (view.model.isDetective) {
+        this.showDetectiveReveal(view.model.itemId as DetectiveGearId, () => this.handleDetectiveFind(view));
+      } else {
+        this.quickDecoyFeedback(view);
+      }
     });
   }
 
-  private showItemReveal(
-    itemId: DetectiveGearId | DecoyId,
-    isDetective: boolean,
-    onContinue: () => void,
-  ): void {
+  private showDetectiveReveal(itemId: DetectiveGearId, onContinue: () => void): void {
     const { x, y, scale } = getGameCenter(this);
     const item = getItemById(itemId);
     const overlay = this.add.container(0, 0).setDepth(45);
 
-    const dim = this.add.rectangle(x, y, this.scale.width, this.scale.height, 0x000000, 0.62);
+    const dim = this.add.rectangle(x, y, this.scale.width, this.scale.height, 0x000000, 0.55);
     const panel = drawScribbleRect(
       this,
       x,
       y - 10 * scale,
-      500 * scale,
-      360 * scale,
+      460 * scale,
+      320 * scale,
       COLORS.white,
       DETECTIVE_MARKER_GREEN,
       5,
     );
 
     const headline = this.add
-      .text(x, y - 135 * scale, isDetective ? 'DETEKTIV-SACHE!' : 'DAS WAR...', {
+      .text(x, y - 120 * scale, `${item?.emoji ?? '⭐'} Super!`, {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${30 * scale}px`,
+        fontSize: `${36 * scale}px`,
         color: '#1a1a2e',
         fontStyle: 'bold',
       })
       .setOrigin(0.5);
 
     const label = this.add
-      .text(x, y - 88 * scale, (item?.label ?? '').toUpperCase(), {
+      .text(x, y - 72 * scale, item?.kidLabel ?? '', {
         fontFamily: 'Fredoka, Comic Sans MS, cursive',
-        fontSize: `${24 * scale}px`,
-        color: isDetective ? '#3d7a54' : '#666688',
+        fontSize: `${28 * scale}px`,
+        color: '#3d7a54',
         fontStyle: 'bold',
-        align: 'center',
-        wordWrap: { width: 420 * scale },
       })
       .setOrigin(0.5);
 
-    const itemWrap = this.add.container(x, y + 15 * scale);
-    itemWrap.add(drawCabinetItem(this, itemId, 1.45 * scale));
+    const itemWrap = this.add.container(x, y + 20 * scale);
+    itemWrap.add(drawCabinetItem(this, itemId, 1.55 * scale));
     itemWrap.setScale(0.25);
+
+    const star = drawStar(this, x + 120 * scale, y - 115 * scale, 22 * scale, true);
+    star.setDepth(46);
 
     const weiterBtn = createComicButton(
       this,
       x,
-      y + 130 * scale,
-      'WEITER',
+      y + 115 * scale,
+      '👍 Weiter',
       () => {
         overlay.destroy(true);
+        star.destroy();
         onContinue();
       },
-      isDetective ? DETECTIVE_MARKER_GREEN : 0x888899,
+      DETECTIVE_MARKER_GREEN,
+      220,
     );
 
     overlay.add([dim, panel, headline, label, itemWrap, weiterBtn]);
@@ -311,6 +340,31 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       scale: 1,
       duration: DETECTIVE_TIMING.itemRevealPop,
       ease: 'Back.easeOut',
+    });
+  }
+
+  private quickDecoyFeedback(view: DrawerView): void {
+    const item = getItemById(view.model.itemId);
+    this.decoyCount += 1;
+    if (this.decoyCount >= 2 && !this.hintShown && this.hintButton) {
+      this.hintButton.setVisible(true);
+      this.hintButton.setAlpha(1);
+      void showSpeechIf(
+        this,
+        'Das war keine Detektiv-Sache. Tippe auf Hilfe, wenn du nicht weiterkommst!',
+      );
+    }
+    const pos = this.slotToWorld(view.model.slot);
+    floatFeedback(
+      this,
+      pos.x,
+      pos.y - 40 * this.layoutScale,
+      `${item?.emoji ?? '🙂'} Nicht das!`,
+      '#666688',
+      22 * this.layoutScale,
+    );
+    this.time.delayedCall(320, () => {
+      this.handleDecoy(view);
     });
   }
 
@@ -343,7 +397,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.reactSamuel('oops');
     detectiveSounds.decoy();
     if (item) {
-      this.showSamuelSpeech(`Hmm… nur ${item.label}!`);
+      this.showSamuelSpeech(`${item.emoji} Nur ${item.kidLabel}!`);
     }
 
     this.animateDrawerClose(view, () => {
@@ -591,27 +645,20 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private createBackpackPanel(px: number, py: number, scale: number): void {
-    const panel = drawScribbleRect(this, px, py, 210 * scale, 290 * scale, DETECTIVE_PAPER, DETECTIVE_MARKER_GREEN, 4);
+    const panel = drawScribbleRect(this, px, py, 180 * scale, 290 * scale, DETECTIVE_PAPER, DETECTIVE_MARKER_GREEN, 4);
     panel.setDepth(2);
 
-    addComicText(this, px, py - 118 * scale, 'Rucksack', 22 * scale).setDepth(3);
+    addComicText(this, px, py - 118 * scale, '🎒', 28 * scale).setDepth(3);
 
-    const slotSize = 44 * scale;
+    const slotSize = 48 * scale;
     const startY = py - 72 * scale;
-    DETECTIVE_GEAR.forEach((gear, index) => {
+    DETECTIVE_GEAR.forEach((_gear, index) => {
       const slot = this.add.container(px, startY + index * (slotSize + 8 * scale));
       slot.setDepth(3);
-      const bg = this.add.rectangle(0, 0, 175 * scale, slotSize, COLORS.white, 0.65);
+      const bg = this.add.rectangle(0, 0, slotSize + 8 * scale, slotSize, COLORS.white, 0.65);
       bg.setStrokeStyle(2, DETECTIVE_MARKER_GREEN, 0.5);
-      const label = this.add
-        .text(-74 * scale, 0, gear.label, {
-          fontFamily: 'Fredoka, Comic Sans MS, cursive',
-          fontSize: `${13 * scale}px`,
-          color: '#1a1a2e',
-        })
-        .setOrigin(0, 0.5);
-      const iconHolder = this.add.container(60 * scale, 0);
-      slot.add([bg, label, iconHolder]);
+      const iconHolder = this.add.container(0, 0);
+      slot.add([bg, iconHolder]);
       this.backpackSlots.push(iconHolder);
     });
 
@@ -623,7 +670,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
       const holder = this.backpackSlots[index];
       holder.removeAll(true);
       if (this.collected.has(gear.id)) {
-        const icon = drawCabinetItem(this, gear.id, 0.4 * this.layoutScale);
+        const icon = drawCabinetItem(this, gear.id, 0.42 * this.layoutScale);
         holder.add(icon);
         this.tweens.add({
           targets: icon,
@@ -633,16 +680,46 @@ export class DetectiveCabinetScene extends Phaser.Scene {
           ease: 'Back.easeOut',
         });
       } else {
-        const placeholder = this.add
-          .text(0, 0, '?', {
+        const ghost = this.add
+          .text(0, 0, gear.emoji, {
             fontFamily: 'Fredoka, Comic Sans MS, cursive',
-            fontSize: `${22 * this.layoutScale}px`,
-            color: '#9999aa',
+            fontSize: `${24 * this.layoutScale}px`,
+            color: '#bbbbcc',
           })
-          .setOrigin(0.5);
-        holder.add(placeholder);
+          .setOrigin(0.5)
+          .setAlpha(0.45);
+        holder.add(ghost);
       }
     });
+    this.progressText?.setText(`⭐ ${this.collected.size} von ${DETECTIVE_GEAR.length}`);
+  }
+
+  private giveHint(): void {
+    if (this.inputLocked || this.hintShown) return;
+    const candidates = this.drawers.filter((d) => d.isDetective && !d.lockedOpen);
+    if (candidates.length === 0) return;
+
+    this.hintShown = true;
+    const pick = candidates[Phaser.Math.Between(0, candidates.length - 1)];
+    const view = this.drawerViews.find((v) => v.model.uid === pick.uid);
+    if (!view) return;
+
+    this.hintPulseTween?.stop();
+    this.hintPulseTween = this.tweens.add({
+      targets: view.front,
+      scaleX: 1.08,
+      scaleY: 1.08,
+      duration: 280,
+      yoyo: true,
+      repeat: 5,
+      ease: 'Sine.easeInOut',
+      onComplete: () => {
+        view.front.setScale(1);
+      },
+    });
+
+    const gear = getItemById(pick.itemId);
+    void showSpeechIf(this, `Hier glitzert etwas! ${gear?.emoji ?? '🔍'} Vielleicht ist deine ${gear?.kidLabel ?? 'Sache'} hier.`);
   }
 
   private createFooterButtons(x: number, y: number, scale: number): void {
@@ -654,6 +731,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
     this.inputLocked = true;
     detectiveSounds.win();
     this.reactSamuel('happy');
+    void showSpeechIf(this, 'Alle fünf Sachen gefunden! Samuel ist bereit für den Fall!');
     const { x, y, scale } = getGameCenter(this);
     const overlay = this.add.container(0, 0).setDepth(50);
     const dim = this.add.rectangle(x, y, this.scale.width, this.scale.height, 0x000000, 0.45);

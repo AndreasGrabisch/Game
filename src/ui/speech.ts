@@ -9,6 +9,23 @@ interface PendingSpeech {
 
 let pending: PendingSpeech | null = null;
 
+function speakGerman(text: string): void {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (!clean) return;
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.lang = 'de-DE';
+  utterance.rate = 0.92;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeaking(): void {
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+}
+
 function closeOverlay(): void {
   const overlay = document.getElementById('ui-overlay');
   overlay?.classList.add('hidden');
@@ -39,8 +56,10 @@ export function showSpeech(text: string): Promise<SpeechResult> {
     speechText.textContent = text;
     overlay.classList.remove('hidden');
     overlay.classList.add('active');
+    speakGerman(text);
 
     const handler = () => {
+      stopSpeaking();
       closeOverlay();
       if (pending?.handler === handler) pending = null;
       speechBtn.removeEventListener('click', handler);
@@ -53,6 +72,7 @@ export function showSpeech(text: string): Promise<SpeechResult> {
 }
 
 export function hideSpeech(): void {
+  stopSpeaking();
   closeOverlay();
   cancelPending();
 }

@@ -113,4 +113,11 @@ export const detectiveSounds = {
     playTone(784, 0.12, 'triangle', 0.07, 0.24);
     playTone(988, 0.28, 'triangle', 0.06, 0.36);
   },
+
+  celebrate(): void {
+    playTone(784, 0.08, 'triangle', 0.06);
+    playTone(988, 0.08, 'triangle', 0.06, 0.08);
+    playTone(1175, 0.14, 'triangle', 0.055, 0.16);
+    playTone(1319, 0.22, 'triangle', 0.05, 0.26);
+  },
 };

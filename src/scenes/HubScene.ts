@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants';
-import { drawSamuel, addComicText, createComicButton } from '../game/graphics';
+import { addComicText, createComicButton } from '../game/graphics';
+import { spawnSamuelCompanion } from '../game/characterCompanion';
 import { getGameCenter } from './BootScene';
 import { APP_HOME_MODES, type AppHomeMode } from '../data/appModes';
 import { getAppRewardSummary, getAppTotalStars } from '../game/appProgress';
@@ -50,16 +51,13 @@ export class HubScene extends Phaser.Scene {
       layout.portrait ? 130 : 150,
     ).setDepth(5);
 
-    const samuel = drawSamuel(this, x - (layout.portrait ? 150 : 320) * s, y + (layout.portrait ? 200 : 120) * s, 0.9 * s);
-    samuel.setDepth(2);
-    this.tweens.add({
-      targets: samuel,
-      y: samuel.y - 6 * s,
-      duration: 1200,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    spawnSamuelCompanion(
+      this,
+      x - (layout.portrait ? 150 : 320) * s,
+      y + (layout.portrait ? 200 : 120) * s,
+      0.9 * s,
+      2,
+    );
 
     const modes = APP_HOME_MODES;
     if (layout.portrait) {

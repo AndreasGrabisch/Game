@@ -28,6 +28,7 @@ import { detectiveSounds } from '../game/detectiveAudio';
 import { publicAssetUrl } from '../game/assetPath';
 import { tryEnableGameDisplay } from '../game/display';
 import { DETECTIVE_TIMING } from '../game/detectiveTiming';
+import { reactBuddyMood, spawnSamuelBuddy } from '../game/characterCompanion';
 import { playConfettiBurst } from '../game/celebrationConfetti';
 import { readSceneEnterStyle, runSceneEnter, transitionToScene } from '../game/sceneTransition';
 import { bindSceneMusic } from '../game/sceneMusic';
@@ -78,7 +79,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   private hintButton?: Phaser.GameObjects.Container;
   private shuffleSkipButton?: Phaser.GameObjects.Container;
   private shuffleToken = 0;
-  private buddy?: Phaser.GameObjects.Text;
+  private buddy?: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: 'DetectiveCabinetScene' });
@@ -142,10 +143,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
 
     const buddyX = x - this.scale.width / 2 + 56 * this.layoutScale;
     const buddyY = y + (this.portraitMode ? 170 : 152) * this.layoutScale;
-    this.buddy = this.add
-      .text(buddyX, buddyY, '🕵️', { fontSize: `${34 * this.layoutScale}px` })
-      .setOrigin(0.5)
-      .setDepth(8);
+    this.buddy = spawnSamuelBuddy(this, buddyX, buddyY, this.layoutScale, 8);
 
     this.initDrawerModels();
     this.buildCabinetFrame();
@@ -247,21 +245,7 @@ export class DetectiveCabinetScene extends Phaser.Scene {
   }
 
   private reactBuddy(mood: 'happy' | 'oops' | 'peek'): void {
-    if (!this.buddy) return;
-    const face = mood === 'happy' ? '🎉' : mood === 'oops' ? '😅' : '👀';
-    this.buddy.setText(face);
-    this.tweens.add({
-      targets: this.buddy,
-      scale: mood === 'happy' ? 1.35 : 1.15,
-      duration: 220,
-      yoyo: true,
-      ease: 'Back.easeOut',
-      onComplete: () => {
-        this.time.delayedCall(900, () => {
-          if (this.buddy?.active) this.buddy.setText('🕵️');
-        });
-      },
-    });
+    reactBuddyMood(this, this.buddy, mood);
   }
 
   private trackDaily(kind: DailyMissionKind, amount = 1): void {

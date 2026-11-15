@@ -1,17 +1,17 @@
 import type Phaser from 'phaser';
 import { feedbackSounds } from './feedbackAudio';
-import { drawSamuel } from './graphics';
+import {
+  drawSamuelBust,
+  drawSamuelSideView,
+  getSamuelParts,
+  playSamuelCheer,
+  playSamuelOops,
+  playSamuelWave,
+  startSamuelIdle,
+} from './samuelCharacter';
 
 export function attachIdleBounce(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject, amount = 6, duration = 1200): void {
-  const typed = target as Phaser.GameObjects.GameObject & { y: number };
-  scene.tweens.add({
-    targets: target,
-    y: typed.y - amount,
-    duration,
-    yoyo: true,
-    repeat: -1,
-    ease: 'Sine.easeInOut',
-  });
+  startSamuelIdle(scene, target, amount, duration);
 }
 
 export function spawnSamuelCompanion(
@@ -21,38 +21,63 @@ export function spawnSamuelCompanion(
   scale: number,
   depth = 6,
 ): Phaser.GameObjects.Container {
-  const samuel = drawSamuel(scene, x, y, scale);
+  const samuel = drawSamuelSideView(scene, x, y, scale);
   samuel.setDepth(depth);
-  attachIdleBounce(scene, samuel, 5 * scale, 1100);
+  startSamuelIdle(scene, samuel, 5 * scale, 1100);
   return samuel;
+}
+
+export function spawnSamuelBuddy(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  scale: number,
+  depth = 8,
+): Phaser.GameObjects.Container {
+  const buddy = drawSamuelBust(scene, x, y, scale);
+  buddy.setDepth(depth);
+  startSamuelIdle(scene, buddy, 4 * scale, 1000);
+  return buddy;
+}
+
+export function reactCompanionWave(scene: Phaser.Scene, target?: Phaser.GameObjects.GameObject): void {
+  if (!target) return;
+  playSamuelWave(scene, target);
 }
 
 export function reactCompanionCheer(scene: Phaser.Scene, target?: Phaser.GameObjects.GameObject): void {
   if (!target) return;
   feedbackSounds.catch();
-  scene.tweens.add({
-    targets: target,
-    scaleX: 1.12,
-    scaleY: 1.12,
-    duration: 220,
-    yoyo: true,
-    ease: 'Back.easeOut',
-  });
+  playSamuelCheer(scene, target);
 }
 
 export function reactCompanionOops(scene: Phaser.Scene, target?: Phaser.GameObjects.GameObject): void {
   if (!target) return;
-  scene.tweens.add({
-    targets: target,
-    angle: -6,
-    duration: 120,
-    yoyo: true,
-    repeat: 1,
-    ease: 'Sine.easeInOut',
-    onComplete: () => {
-      if ((target as Phaser.GameObjects.GameObject & { angle?: number }).angle !== undefined) {
-        (target as Phaser.GameObjects.GameObject & { angle: number }).angle = 0;
-      }
-    },
-  });
+  playSamuelOops(scene, target);
+}
+
+export function reactBuddyMood(
+  scene: Phaser.Scene,
+  buddy: Phaser.GameObjects.Container | undefined,
+  mood: 'happy' | 'oops' | 'peek',
+): void {
+  if (!buddy) return;
+  if (mood === 'happy') {
+    playSamuelCheer(scene, buddy);
+    return;
+  }
+  if (mood === 'oops') {
+    playSamuelOops(scene, buddy);
+    return;
+  }
+  const parts = getSamuelParts(buddy);
+  if (parts) {
+    scene.tweens.add({
+      targets: parts.head,
+      x: parts.head.x + 6,
+      duration: 280,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    });
+  }
 }

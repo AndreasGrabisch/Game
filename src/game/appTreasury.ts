@@ -5,12 +5,14 @@ export interface AppTreasuryState {
   celebratedMilestones: string[];
   rideCompletions: number;
   stickerTapCounts: Record<string, number>;
+  ballGameWins: number;
 }
 
 const DEFAULT: AppTreasuryState = {
   celebratedMilestones: [],
   rideCompletions: 0,
   stickerTapCounts: {},
+  ballGameWins: 0,
 };
 
 export function loadAppTreasury(): AppTreasuryState {
@@ -22,6 +24,7 @@ export function loadAppTreasury(): AppTreasuryState {
       celebratedMilestones: parsed.celebratedMilestones ?? [],
       rideCompletions: parsed.rideCompletions ?? 0,
       stickerTapCounts: parsed.stickerTapCounts ?? {},
+      ballGameWins: parsed.ballGameWins ?? 0,
     };
   } catch {
     return { ...DEFAULT };
@@ -72,7 +75,19 @@ export function getColorSortBestStars(): number {
   }
 }
 
-export type TreasuryStickerSource = 'bike' | 'detective' | 'daily' | 'colors' | 'ride' | 'milestone';
+export function recordBallGameWin(): { firstWin: boolean; total: number } {
+  const state = loadAppTreasury();
+  const firstWin = state.ballGameWins === 0;
+  state.ballGameWins += 1;
+  saveAppTreasury(state);
+  return { firstWin, total: state.ballGameWins };
+}
+
+export function getBallGameWinCount(): number {
+  return loadAppTreasury().ballGameWins;
+}
+
+export type TreasuryStickerSource = 'bike' | 'detective' | 'daily' | 'colors' | 'ride' | 'milestone' | 'ball';
 
 export interface TreasurySticker {
   id: string;

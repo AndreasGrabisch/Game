@@ -163,3 +163,16 @@ const DECOY_ROTATION: DecoyKind[] = ['sock', 'banana', 'duck', 'cupcake'];
 export function randomDecoyKind(): DecoyKind {
   return Phaser.Utils.Array.GetRandom(DECOY_ROTATION);
 }
+
+export function drawSoccerBall(scene: Phaser.Scene, radius: number): Phaser.GameObjects.Container {
+  const ball = scene.add.container(0, 0);
+  const base = scene.add.circle(0, 0, radius, COLORS.white);
+  base.setStrokeStyle(Math.max(3, radius * 0.12), COLORS.outline);
+  const patch = scene.add.graphics();
+  patch.fillStyle(0x222222, 0.35);
+  patch.fillCircle(-radius * 0.35, -radius * 0.12, radius * 0.28);
+  patch.fillCircle(radius * 0.22, radius * 0.3, radius * 0.22);
+  const shine = scene.add.circle(-radius * 0.28, -radius * 0.32, radius * 0.14, COLORS.white, 0.55);
+  ball.add([base, patch, shine]);
+  return ball;
+}

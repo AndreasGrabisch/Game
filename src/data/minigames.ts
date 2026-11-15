@@ -32,11 +32,20 @@ export const MINIGAMES: MinigameDefinition[] = [
   {
     id: 'colors',
     title: 'Farben sortieren',
-    tagline: 'Jede Sache in den richtigen Eimer',
     emoji: '🎨',
+    tagline: 'Jede Sache in den richtigen Eimer',
     status: 'available',
     sceneKey: 'ColorSortScene',
     accentColor: 0x6bcb77,
+  },
+  {
+    id: 'ball',
+    title: 'Ballspiel',
+    tagline: 'Fange die Bälle',
+    emoji: '⚽',
+    status: 'available',
+    sceneKey: 'BallGameScene',
+    accentColor: 0xffd93d,
   },
 ];
 

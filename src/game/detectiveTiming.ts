@@ -17,11 +17,12 @@ export const DETECTIVE_TIMING = {
   backpackPop: 320,
   speechVisibleMs: 2400,
 
-  shuffleSwirlFade: 700,
-  shuffleWiggleMs: 160,
-  shuffleWiggleRepeats: 2,
+  shuffleSwirlFade: 380,
+  shuffleWiggleMs: 110,
+  shuffleWiggleRepeats: 1,
   /** Schneller gemischt — weniger Wartezeit für Kinder. */
-  shuffleMoveEachMs: 650,
+  shuffleMoveEachMs: 380,
   /** Wie kurz vor dem Landen die blockierende Schublade losfliegt. */
-  shuffleVacateLeadMs: 180,
+  shuffleVacateLeadMs: 120,
+  shuffleInstantMs: 1,
 } as const;

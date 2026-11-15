@@ -58,6 +58,24 @@ export const DETECTIVE_CASES: DetectiveCaseDefinition[] = [
     winLine: 'Fall gelöst — toll gemacht!',
     unlockRequires: 'case-cabinet',
   },
+  {
+    id: 'case-kitchen',
+    title: 'Fall 3: Küche',
+    tagline: 'Nur 2 Sachen — Mini-Fall!',
+    emoji: '🍪',
+    order: 3,
+    gearIds: ['flashlight', 'tape'],
+    decoyIds: ['sock', 'duck'],
+    cols: 2,
+    rows: 2,
+    hintAfterDecoys: 0,
+    badgeEmoji: '🏅',
+    badgeLabel: 'Küchen-Detektiv',
+    stickerReward: '🧁',
+    introShort: '🍪\nFinde 2 Sachen!',
+    winLine: 'Küchen-Fall geschafft — super!',
+    unlockRequires: 'case-park',
+  },
 ];
 
 export function getDetectiveCaseById(id: string): DetectiveCaseDefinition | undefined {

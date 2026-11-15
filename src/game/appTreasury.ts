@@ -6,6 +6,7 @@ export interface AppTreasuryState {
   rideCompletions: number;
   stickerTapCounts: Record<string, number>;
   ballGameWins: number;
+  ballSuperRounds: number;
 }
 
 const DEFAULT: AppTreasuryState = {
@@ -13,6 +14,7 @@ const DEFAULT: AppTreasuryState = {
   rideCompletions: 0,
   stickerTapCounts: {},
   ballGameWins: 0,
+  ballSuperRounds: 0,
 };
 
 export function loadAppTreasury(): AppTreasuryState {
@@ -25,6 +27,7 @@ export function loadAppTreasury(): AppTreasuryState {
       rideCompletions: parsed.rideCompletions ?? 0,
       stickerTapCounts: parsed.stickerTapCounts ?? {},
       ballGameWins: parsed.ballGameWins ?? 0,
+      ballSuperRounds: parsed.ballSuperRounds ?? 0,
     };
   } catch {
     return { ...DEFAULT };
@@ -85,6 +88,18 @@ export function recordBallGameWin(): { firstWin: boolean; total: number } {
 
 export function getBallGameWinCount(): number {
   return loadAppTreasury().ballGameWins;
+}
+
+export function recordBallSuperRound(): { firstSuper: boolean; total: number } {
+  const state = loadAppTreasury();
+  const firstSuper = state.ballSuperRounds === 0;
+  state.ballSuperRounds += 1;
+  saveAppTreasury(state);
+  return { firstSuper, total: state.ballSuperRounds };
+}
+
+export function getBallSuperRoundCount(): number {
+  return loadAppTreasury().ballSuperRounds;
 }
 
 export type TreasuryStickerSource = 'bike' | 'detective' | 'daily' | 'colors' | 'ride' | 'milestone' | 'ball';

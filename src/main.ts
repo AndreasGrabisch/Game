@@ -59,4 +59,5 @@ const config: Phaser.Types.Core.GameConfig = {
 bindFullscreenOnFirstTap();
 setupRotateHint();
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+(window as Window & { __samuelGame?: Phaser.Game }).__samuelGame = game;

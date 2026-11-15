@@ -6,6 +6,7 @@ import { starsForMistakes } from '../game/scoring';
 import { getGameCenter } from './BootScene';
 import { reactCompanionCheer, reactCompanionOops, spawnSamuelCompanion } from '../game/characterCompanion';
 import { drawColorSortBackdrop } from '../game/sceneBackgrounds';
+import { drawColorSortPiece, type ColorSortShapeKind } from '../game/objectGraphics';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { playConfettiBurst } from '../game/celebrationConfetti';
@@ -264,35 +265,8 @@ export class ColorSortScene extends Phaser.Scene {
 
   private makeShape(id: ColorId, index: number, scale: number): Phaser.GameObjects.GameObject {
     const tint = colorDef(id).tint;
-    const kind = index % 4;
-    if (kind === 0) {
-      const circle = this.add.circle(0, 0, 22 * scale, tint);
-      circle.setStrokeStyle(3 * scale, COLORS.outline);
-      return circle;
-    }
-    if (kind === 1) {
-      const star = this.add.star(0, 0, 5, 10 * scale, 22 * scale, tint);
-      star.setStrokeStyle(3 * scale, COLORS.outline);
-      return star;
-    }
-    if (kind === 2) {
-      const triangle = this.add.triangle(
-        0,
-        0,
-        0,
-        -24 * scale,
-        22 * scale,
-        18 * scale,
-        -22 * scale,
-        18 * scale,
-        tint,
-      );
-      triangle.setStrokeStyle(3 * scale, COLORS.outline);
-      return triangle;
-    }
-    const rect = this.add.rectangle(0, 0, 36 * scale, 36 * scale, tint);
-    rect.setStrokeStyle(3 * scale, COLORS.outline);
-    return rect;
+    const kind = (index % 4) as ColorSortShapeKind;
+    return drawColorSortPiece(this, tint, kind, scale);
   }
 
   private selectItem(item: SortItem): void {

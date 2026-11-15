@@ -2,15 +2,12 @@ import Phaser from 'phaser';
 import { COLORS } from './constants';
 import { feedbackSounds } from './feedbackAudio';
 
-export interface BikeDrawOptions {
-  showWheels?: boolean;
-  showFrame?: boolean;
-  showPedals?: boolean;
-  showHandlebar?: boolean;
-  showBell?: boolean;
-  wheelAlpha?: number;
-  frameAlpha?: number;
-}
+export type { BikeDrawOptions } from './bikeGraphics';
+import {
+  drawCartoonWheel,
+  drawIllustratedBike,
+  type BikeDrawOptions,
+} from './bikeGraphics';
 
 export function drawSamuel(
   scene: Phaser.Scene,
@@ -62,77 +59,7 @@ export function drawBike(
   scale = 1,
   options: BikeDrawOptions = {},
 ): Phaser.GameObjects.Container {
-  const {
-    showWheels = false,
-    showFrame = true,
-    showPedals = false,
-    showHandlebar = false,
-    showBell = false,
-    wheelAlpha = 1,
-    frameAlpha = 1,
-  } = options;
-
-  const container = scene.add.container(x, y);
-  const s = scale;
-  const line = 3 * s;
-
-  if (showFrame) {
-    const frame = scene.add.graphics();
-    frame.lineStyle(line, COLORS.bikeFrame, frameAlpha);
-    frame.strokeCircle(-55 * s, 20 * s, 38 * s);
-    frame.strokeCircle(55 * s, 20 * s, 38 * s);
-    frame.beginPath();
-    frame.moveTo(-55 * s, 20 * s);
-    frame.lineTo(0, -30 * s);
-    frame.lineTo(55 * s, 20 * s);
-    frame.lineTo(0, 20 * s);
-    frame.closePath();
-    frame.strokePath();
-    frame.lineStyle(line, COLORS.bikeFrame, frameAlpha);
-    frame.lineBetween(0, -30 * s, 0, -55 * s);
-    container.add(frame);
-  }
-
-  if (showWheels) {
-    for (const wx of [-55, 55]) {
-      const wheel = drawWheel(scene, wx * s, 20 * s, 36 * s, wheelAlpha);
-      container.add(wheel);
-    }
-  } else if (showFrame) {
-    for (const wx of [-55, 55]) {
-      const placeholder = scene.add.circle(wx * s, 20 * s, 36 * s);
-      placeholder.setStrokeStyle(2 * s, COLORS.outline, 0.3);
-      placeholder.setFillStyle(0xffffff, 0.1);
-      container.add(placeholder);
-    }
-  }
-
-  if (showHandlebar) {
-    const bar = scene.add.graphics();
-    bar.lineStyle(line, COLORS.bikeFrame, frameAlpha);
-    bar.lineBetween(-20 * s, -55 * s, 20 * s, -55 * s);
-    bar.lineBetween(0, -55 * s, 0, -30 * s);
-    container.add(bar);
-  }
-
-  if (showPedals) {
-    const crank = scene.add.circle(0, 20 * s, 8 * s, COLORS.wheel);
-    crank.setStrokeStyle(line, COLORS.outline);
-    const pedalL = scene.add.rectangle(-14 * s, 20 * s, 12 * s, 6 * s, COLORS.wheelRim);
-    pedalL.setStrokeStyle(2 * s, COLORS.outline);
-    const pedalR = scene.add.rectangle(14 * s, 20 * s, 12 * s, 6 * s, COLORS.wheelRim);
-    pedalR.setStrokeStyle(2 * s, COLORS.outline);
-    container.add([crank, pedalL, pedalR]);
-  }
-
-  if (showBell) {
-    const bell = scene.add.circle(-16 * s, -58 * s, 9 * s, COLORS.star);
-    bell.setStrokeStyle(2 * s, COLORS.outline);
-    const ding = scene.add.text(-16 * s, -58 * s, '🔔', { fontSize: `${10 * s}px` }).setOrigin(0.5);
-    container.add([bell, ding]);
-  }
-
-  return container;
+  return drawIllustratedBike(scene, x, y, scale, options);
 }
 
 export function drawWheel(
@@ -142,24 +69,7 @@ export function drawWheel(
   radius: number,
   alpha = 1,
 ): Phaser.GameObjects.Container {
-  const container = scene.add.container(x, y);
-  const tire = scene.add.circle(0, 0, radius, COLORS.wheel, alpha);
-  tire.setStrokeStyle(3, COLORS.outline, alpha);
-  const rim = scene.add.circle(0, 0, radius * 0.6, COLORS.wheelRim, alpha);
-  rim.setStrokeStyle(2, COLORS.outline, alpha);
-  const spoke = scene.add.graphics();
-  spoke.lineStyle(2, COLORS.outline, alpha * 0.5);
-  for (let i = 0; i < 4; i++) {
-    const angle = (i * Math.PI) / 2;
-    spoke.lineBetween(
-      Math.cos(angle) * radius * 0.2,
-      Math.sin(angle) * radius * 0.2,
-      Math.cos(angle) * radius * 0.55,
-      Math.sin(angle) * radius * 0.55,
-    );
-  }
-  container.add([tire, rim, spoke]);
-  return container;
+  return drawCartoonWheel(scene, x, y, radius, alpha, 'round');
 }
 
 export function drawSquareWheel(
@@ -168,11 +78,7 @@ export function drawSquareWheel(
   y: number,
   size: number,
 ): Phaser.GameObjects.Container {
-  const container = scene.add.container(x, y);
-  const sq = scene.add.rectangle(0, 0, size, size, COLORS.wheel);
-  sq.setStrokeStyle(3, COLORS.outline);
-  container.add(sq);
-  return container;
+  return drawCartoonWheel(scene, x, y, size * 0.42, 1, 'square');
 }
 
 export function drawStar(

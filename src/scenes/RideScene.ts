@@ -6,6 +6,11 @@ import { starsForMistakes } from '../game/scoring';
 import { isPartUnlocked } from '../game/Progress';
 import { getGameCenter } from './BootScene';
 import { drawRideBackdrop } from '../game/sceneBackgrounds';
+import {
+  drawIllustratedFinishBanner,
+  drawIllustratedPuddle,
+  drawIllustratedTree,
+} from '../game/objectGraphics';
 import { bindSceneMusic } from '../game/sceneMusic';
 import { spawnSamuelCompanion, reactCompanionCheer } from '../game/characterCompanion';
 import { getDetectiveLayoutMode } from '../game/detectiveLayout';
@@ -142,19 +147,10 @@ export class RideScene extends Phaser.Scene {
     }
 
     for (let i = 0; i < 5; i++) {
-      const tree = this.makeTree(120 + i * 240, this.groundY - 70 * scale, scale);
+      const tree = drawIllustratedTree(this, scale);
+      tree.setPosition(120 + i * 240, this.groundY - 70 * scale);
       this.props.push({ obj: tree, factor: 0.72, span: 1280 });
     }
-  }
-
-  private makeTree(x: number, y: number, scale: number): Phaser.GameObjects.Container {
-    const tree = this.add.container(x, y);
-    const trunk = this.add.rectangle(0, 18 * scale, 12 * scale, 28 * scale, 0x8b5a2b);
-    trunk.setStrokeStyle(2, COLORS.outline);
-    const crown = this.add.circle(0, -8 * scale, 26 * scale, 0x3cba5a);
-    crown.setStrokeStyle(3, COLORS.outline);
-    tree.add([trunk, crown]);
-    return tree;
   }
 
   private createRider(scale: number): void {
@@ -199,29 +195,16 @@ export class RideScene extends Phaser.Scene {
   }
 
   private makePuddle(scale: number): Phaser.GameObjects.Container {
-    const puddle = this.add.container(1100, this.groundY);
+    const puddle = drawIllustratedPuddle(this, scale);
+    puddle.setPosition(1100, this.groundY);
     puddle.setDepth(4);
-    const water = this.add.ellipse(0, 0, 78 * scale, 28 * scale, 0x4aa3df);
-    water.setStrokeStyle(3, COLORS.outline);
-    const shine = this.add.ellipse(-12 * scale, -4 * scale, 22 * scale, 8 * scale, COLORS.white, 0.7);
-    puddle.add([water, shine]);
     return puddle;
   }
 
   private makeFinish(scale: number): Phaser.GameObjects.Container {
-    const banner = this.add.container(1200, this.groundY - 40 * scale);
+    const banner = drawIllustratedFinishBanner(this, scale);
+    banner.setPosition(1200, this.groundY - 40 * scale);
     banner.setDepth(4);
-    const pole = this.add.rectangle(0, 20 * scale, 8 * scale, 80 * scale, 0xdddddd);
-    pole.setStrokeStyle(2, COLORS.outline);
-    const flag = this.add.container(28 * scale, -16 * scale);
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < 4; col++) {
-        const dark = (row + col) % 2 === 0;
-        const cell = this.add.rectangle((col - 1.5) * 12 * scale, (row - 1.5) * 12 * scale, 12 * scale, 12 * scale, dark ? 0x1a1a2e : COLORS.white);
-        flag.add(cell);
-      }
-    }
-    banner.add([pole, flag]);
     return banner;
   }
 

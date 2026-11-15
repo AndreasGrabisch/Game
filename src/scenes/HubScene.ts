@@ -72,7 +72,7 @@ export class HubScene extends Phaser.Scene {
       modes.forEach((mode, index) => {
         const col = index % 2;
         const row = Math.floor(index / 2);
-        this.createModeCard(startX + col * (cardW + gapX), startY + row * (cardH + gapY), cardW, cardH, s, mode);
+        this.createModeCard(startX + col * (cardW + gapX), startY + row * (cardH + gapY), cardW, cardH, s, mode, layout.portrait);
       });
     } else {
       const cardW = Math.min(200 * s, (860 * s - (modes.length - 1) * 16 * s) / modes.length);
@@ -81,7 +81,7 @@ export class HubScene extends Phaser.Scene {
       const totalW = modes.length * cardW + (modes.length - 1) * gap;
       const startX = x - totalW / 2 + cardW / 2;
       modes.forEach((mode, index) => {
-        this.createModeCard(startX + index * (cardW + gap), y + 18 * s, cardW, cardH, s, mode);
+        this.createModeCard(startX + index * (cardW + gap), y + 18 * s, cardW, cardH, s, mode, layout.portrait);
       });
     }
 
@@ -137,6 +137,7 @@ export class HubScene extends Phaser.Scene {
     height: number,
     scale: number,
     mode: AppHomeMode,
+    portrait: boolean,
   ): void {
     const unlocked = mode.isUnlocked();
     const container = this.add.container(x, y);
@@ -180,24 +181,35 @@ export class HubScene extends Phaser.Scene {
       container.add(lock);
     }
 
+    const openMode = () => {
+      if (!unlocked) {
+        void showSpeechIf(this, mode.lockHint);
+        return;
+      }
+      transitionToScene(this, mode.sceneKey);
+    };
+
+    const btnW = Math.min(portrait ? 130 : 120, width - 16);
+    const btnY = height / 2 - 36 * scale;
     const btn = createComicButton(
       this,
       x,
-      y + height / 2 - 32 * scale,
+      y + btnY,
       unlocked ? 'Los!' : 'Sperre',
-      () => {
-        if (!unlocked) {
-          void showSpeechIf(this, mode.lockHint);
-          return;
-        }
-        transitionToScene(this, mode.sceneKey);
-      },
+      openMode,
       unlocked ? mode.accentColor : 0xaaaaaa,
-      Math.min(120, width - 24),
+      btnW,
     );
 
+    if (unlocked) {
+      const hit = this.add.rectangle(x, y, width, height, 0xffffff, 0.001);
+      hit.setDepth(2);
+      hit.setInteractive({ useHandCursor: true });
+      hit.on('pointerdown', openMode);
+    }
+
     container.setDepth(3);
-    void btn;
+    btn.setDepth(4);
 
     this.tweens.add({
       targets: container,

@@ -135,7 +135,7 @@ export class ColorSortScene extends Phaser.Scene {
         transitionToHub(this);
       },
       0x5b6ee1,
-      layout.portrait ? 72 : 100,
+      layout.portrait ? 88 : 100,
     ).setDepth(12);
 
     this.input.once('pointerdown', () => {

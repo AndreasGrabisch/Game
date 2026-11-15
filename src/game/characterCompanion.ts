@@ -3,9 +3,9 @@ import { feedbackSounds } from './feedbackAudio';
 import {
   drawSamuelBust,
   drawSamuelSideView,
-  getSamuelParts,
   playSamuelCheer,
   playSamuelOops,
+  playSamuelThink,
   playSamuelWave,
   startSamuelIdle,
 } from './samuelCharacter';
@@ -56,6 +56,11 @@ export function reactCompanionOops(scene: Phaser.Scene, target?: Phaser.GameObje
   playSamuelOops(scene, target);
 }
 
+export function reactCompanionThink(scene: Phaser.Scene, target?: Phaser.GameObjects.GameObject): void {
+  if (!target) return;
+  playSamuelThink(scene, target);
+}
+
 export function reactBuddyMood(
   scene: Phaser.Scene,
   buddy: Phaser.GameObjects.Container | undefined,
@@ -70,14 +75,5 @@ export function reactBuddyMood(
     playSamuelOops(scene, buddy);
     return;
   }
-  const parts = getSamuelParts(buddy);
-  if (parts) {
-    scene.tweens.add({
-      targets: parts.head,
-      x: parts.head.x + 6,
-      duration: 280,
-      yoyo: true,
-      ease: 'Quad.easeOut',
-    });
-  }
+  playSamuelThink(scene, buddy);
 }

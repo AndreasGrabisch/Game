@@ -5,15 +5,75 @@ const CAP_COLOR = 0x4ecdc4;
 const CAP_BRIM = 0x3bb3aa;
 const HAIR = 0x5c3d2e;
 
+export type SamuelExpression = 'smile' | 'cheer' | 'oops' | 'think';
+
 export interface SamuelParts {
   armWave: Phaser.GameObjects.Container;
   head: Phaser.GameObjects.Container;
   face: Phaser.GameObjects.Container;
+  eye: Phaser.GameObjects.Arc;
+  eyeShine: Phaser.GameObjects.Arc;
+  mouth: Phaser.GameObjects.Graphics;
+  brows: Phaser.GameObjects.Graphics;
+  cap?: Phaser.GameObjects.GameObject;
 }
 
 export interface SamuelCharacterOptions {
   cap?: boolean;
   facing?: 'right' | 'left';
+}
+
+function paintMouth(g: Phaser.GameObjects.Graphics, shape: SamuelExpression, s: number): void {
+  g.clear();
+  g.lineStyle(2.2 * s, COLORS.outline);
+  if (shape === 'smile') {
+    g.beginPath();
+    g.arc(8 * s, 4 * s, 9 * s, Phaser.Math.DegToRad(15), Phaser.Math.DegToRad(165), false);
+    g.strokePath();
+    return;
+  }
+  if (shape === 'cheer') {
+    g.fillStyle(0x8b3d3d, 0.85);
+    g.fillEllipse(8 * s, 6 * s, 10 * s, 12 * s);
+    g.strokeEllipse(8 * s, 6 * s, 10 * s, 12 * s);
+    return;
+  }
+  if (shape === 'oops') {
+    g.beginPath();
+    g.arc(8 * s, 8 * s, 6 * s, Phaser.Math.DegToRad(200), Phaser.Math.DegToRad(340), false);
+    g.strokePath();
+    return;
+  }
+  g.lineBetween(2 * s, 5 * s, 14 * s, 5 * s);
+  g.lineBetween(6 * s, 2 * s, 6 * s, 8 * s);
+}
+
+function paintBrows(g: Phaser.GameObjects.Graphics, shape: SamuelExpression, s: number): void {
+  g.clear();
+  g.lineStyle(2 * s, COLORS.outline);
+  if (shape === 'think') {
+    g.lineBetween(4 * s, -10 * s, 10 * s, -12 * s);
+    g.lineBetween(12 * s, -12 * s, 18 * s, -10 * s);
+    return;
+  }
+  if (shape === 'oops') {
+    g.lineBetween(5 * s, -11 * s, 11 * s, -9 * s);
+    return;
+  }
+  g.lineBetween(4 * s, -9 * s, 10 * s, -10 * s);
+}
+
+export function setSamuelExpression(parts: SamuelParts, shape: SamuelExpression, scale: number): void {
+  paintMouth(parts.mouth, shape, scale);
+  paintBrows(parts.brows, shape, scale);
+}
+
+function resolveSamuelRoot(target: Phaser.GameObjects.GameObject): Phaser.GameObjects.Container | undefined {
+  const container = target as Phaser.GameObjects.Container;
+  if (container.getData('samuelParts')) return container;
+  const child = container.list?.[0] as Phaser.GameObjects.Container | undefined;
+  if (child?.getData('samuelParts')) return child;
+  return container.getData('samuelParts') ? container : undefined;
 }
 
 /** Side-view Samuel for hub, workshop, transitions (kid-friendly comic). */
@@ -68,16 +128,15 @@ export function buildSamuelSideCharacter(
 
   const face = scene.add.container(6 * s, 0);
   const cheek = scene.add.ellipse(14 * s, 4 * s, 12 * s, 10 * s, 0xffb89a, 0.35);
+  const brows = scene.add.graphics();
   const eye = scene.add.circle(12 * s, -4 * s, 3.2 * s, COLORS.outline);
   const eyeShine = scene.add.circle(13 * s, -5 * s, 1.2 * s, COLORS.white);
-  const smile = scene.add.graphics();
-  smile.lineStyle(2.2 * s, COLORS.outline);
-  smile.beginPath();
-  smile.arc(8 * s, 4 * s, 9 * s, Phaser.Math.DegToRad(15), Phaser.Math.DegToRad(165), false);
-  smile.strokePath();
+  const mouth = scene.add.graphics();
   const nose = scene.add.circle(16 * s, 0, 2.2 * s, 0xe8a882);
   nose.setStrokeStyle(1.2 * s, COLORS.outline, 0.5);
-  face.add([cheek, eye, eyeShine, nose, smile]);
+  paintMouth(mouth, 'smile', s);
+  paintBrows(brows, 'smile', s);
+  face.add([cheek, brows, eye, eyeShine, nose, mouth]);
 
   const hairBack = scene.add.graphics();
   hairBack.fillStyle(HAIR, 1);
@@ -87,8 +146,9 @@ export function buildSamuelSideCharacter(
 
   head.add([hairBack, skull, face]);
 
+  let capGfx: Phaser.GameObjects.Graphics | undefined;
   if (cap) {
-    const capGfx = scene.add.graphics();
+    capGfx = scene.add.graphics();
     capGfx.fillStyle(CAP_COLOR, 1);
     capGfx.lineStyle(line, COLORS.outline);
     capGfx.fillEllipse(8 * s, -18 * s, 34 * s, 16 * s);
@@ -112,7 +172,7 @@ export function buildSamuelSideCharacter(
 
   root.add([legBack, legFront, armBack, torso, head, armWave]);
 
-  const parts: SamuelParts = { armWave, head, face };
+  const parts: SamuelParts = { armWave, head, face, eye, eyeShine, mouth, brows, cap: capGfx };
   root.setData('samuelParts', parts);
   root.setData('samuelScale', s);
   return root;
@@ -127,7 +187,6 @@ export function drawSamuelSideView(
   return buildSamuelSideCharacter(scene, x, y, scale, { cap: true, facing: 'right' });
 }
 
-/** Compact bust for detective UI corners. */
 export function drawSamuelBust(
   scene: Phaser.Scene,
   x: number,
@@ -138,15 +197,46 @@ export function drawSamuelBust(
   const wrap = scene.add.container(x, y, [bust]);
   wrap.setData('samuelParts', bust.getData('samuelParts'));
   wrap.setData('samuelScale', scale * 0.55);
+  wrap.setData('samuelInner', bust);
   return wrap;
 }
 
 export function getSamuelParts(target: Phaser.GameObjects.GameObject): SamuelParts | undefined {
-  return (target as Phaser.GameObjects.Container).getData('samuelParts') as SamuelParts | undefined;
+  const root = resolveSamuelRoot(target);
+  return root?.getData('samuelParts') as SamuelParts | undefined;
 }
 
 export function getSamuelScale(target: Phaser.GameObjects.GameObject): number {
-  return ((target as Phaser.GameObjects.Container).getData('samuelScale') as number) ?? 1;
+  const container = target as Phaser.GameObjects.Container;
+  const scale = container.getData('samuelScale') as number | undefined;
+  if (scale !== undefined) return scale;
+  const inner = container.list?.[0] as Phaser.GameObjects.Container | undefined;
+  return (inner?.getData('samuelScale') as number) ?? 1;
+}
+
+export function scheduleSamuelBlink(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject): void {
+  const parts = getSamuelParts(target);
+  if (!parts) return;
+  const existing = (target as Phaser.GameObjects.Container).getData('samuelBlinkTimer') as
+    | Phaser.Time.TimerEvent
+    | undefined;
+  existing?.remove(false);
+
+  const timer = scene.time.addEvent({
+    delay: Phaser.Math.Between(2200, 3800),
+    loop: true,
+    callback: () => {
+      if (!parts.eye.active) return;
+      scene.tweens.add({
+        targets: [parts.eye, parts.eyeShine],
+        scaleY: 0.12,
+        duration: 70,
+        yoyo: true,
+        ease: 'Sine.easeIn',
+      });
+    },
+  });
+  (target as Phaser.GameObjects.Container).setData('samuelBlinkTimer', timer);
 }
 
 export function startSamuelIdle(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject, amount = 6, duration = 1200): void {
@@ -161,7 +251,9 @@ export function startSamuelIdle(scene: Phaser.Scene, target: Phaser.GameObjects.
     ease: 'Sine.easeInOut',
   });
   const parts = getSamuelParts(target);
+  const s = getSamuelScale(target);
   if (parts) {
+    setSamuelExpression(parts, 'smile', s);
     scene.tweens.add({
       targets: parts.head,
       angle: 2,
@@ -171,11 +263,14 @@ export function startSamuelIdle(scene: Phaser.Scene, target: Phaser.GameObjects.
       ease: 'Sine.easeInOut',
     });
   }
+  scheduleSamuelBlink(scene, target);
 }
 
 export function playSamuelWave(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject): void {
   const parts = getSamuelParts(target);
   if (!parts) return;
+  const s = getSamuelScale(target);
+  setSamuelExpression(parts, 'cheer', s);
   scene.tweens.killTweensOf(parts.armWave);
   parts.armWave.setAngle(-18);
   scene.tweens.add({
@@ -185,61 +280,110 @@ export function playSamuelWave(scene: Phaser.Scene, target: Phaser.GameObjects.G
     yoyo: true,
     repeat: 3,
     ease: 'Sine.easeInOut',
+    onComplete: () => setSamuelExpression(parts, 'smile', s),
   });
 }
 
 export function playSamuelCheer(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject): void {
   const s = getSamuelScale(target);
+  const parts = getSamuelParts(target);
+  const root = target as Phaser.GameObjects.Container;
+  const baseX = root.scaleX >= 0 ? root.scaleX : Math.abs(root.scaleX);
   scene.tweens.add({
     targets: target,
-    scaleX: 1.08,
-    scaleY: 1.08,
-    duration: 200,
+    scaleX: baseX * 1.14,
+    scaleY: 1.14,
+    duration: 240,
     yoyo: true,
     ease: 'Back.easeOut',
   });
-  const parts = getSamuelParts(target);
   if (parts) {
+    setSamuelExpression(parts, 'cheer', s);
     scene.tweens.add({
       targets: parts.armWave,
-      angle: -130,
-      duration: 260,
+      angle: -135,
+      duration: 280,
       yoyo: true,
       ease: 'Back.easeOut',
     });
     scene.tweens.add({
       targets: parts.head,
-      y: parts.head.y - 4 * s,
-      duration: 220,
+      y: parts.head.y - 8 * s,
+      duration: 240,
       yoyo: true,
       ease: 'Sine.easeOut',
     });
+    if (parts.cap) {
+      scene.tweens.add({
+        targets: parts.cap,
+        y: '-=4',
+        duration: 180,
+        yoyo: true,
+        repeat: 1,
+        ease: 'Bounce.easeOut',
+      });
+    }
+    scene.time.delayedCall(520, () => setSamuelExpression(parts, 'smile', s));
   }
 }
 
 export function playSamuelOops(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject): void {
+  const s = getSamuelScale(target);
+  const parts = getSamuelParts(target);
+  const root = target as Phaser.GameObjects.Container & { y: number };
+  const baseY = root.y;
+  if (parts) setSamuelExpression(parts, 'oops', s);
   scene.tweens.add({
     targets: target,
-    angle: -5,
-    duration: 90,
+    angle: -4,
+    duration: 100,
     yoyo: true,
-    repeat: 2,
+    repeat: 1,
     ease: 'Sine.easeInOut',
+    onComplete: () => root.setAngle(0),
+  });
+  scene.tweens.add({
+    targets: target,
+    y: baseY + 10 * s,
+    duration: 160,
+    yoyo: true,
+    ease: 'Quad.easeOut',
     onComplete: () => {
-      (target as Phaser.GameObjects.Container).setAngle(0);
+      if (parts) {
+        setSamuelExpression(parts, 'smile', s);
+        parts.head.setAngle(0);
+      }
     },
   });
-  const parts = getSamuelParts(target);
   if (parts) {
-    const smile = parts.face.list[parts.face.list.length - 1] as Phaser.GameObjects.Graphics;
     scene.tweens.add({
       targets: parts.head,
-      angle: -6,
-      duration: 160,
+      angle: -8,
+      duration: 140,
       yoyo: true,
       ease: 'Sine.easeInOut',
-      onComplete: () => parts.head.setAngle(0),
     });
-    void smile;
   }
+}
+
+export function playSamuelThink(scene: Phaser.Scene, target: Phaser.GameObjects.GameObject): void {
+  const parts = getSamuelParts(target);
+  if (!parts) return;
+  const s = getSamuelScale(target);
+  setSamuelExpression(parts, 'think', s);
+  scene.tweens.add({
+    targets: parts.armWave,
+    angle: -50,
+    duration: 320,
+    yoyo: true,
+    ease: 'Sine.easeInOut',
+  });
+  scene.tweens.add({
+    targets: parts.head,
+    angle: 6,
+    duration: 360,
+    yoyo: true,
+    ease: 'Sine.easeInOut',
+    onComplete: () => setSamuelExpression(parts, 'smile', s),
+  });
 }

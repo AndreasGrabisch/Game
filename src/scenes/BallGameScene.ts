@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from '../game/constants';
 import { addComicText, createComicButton, floatFeedback } from '../game/graphics';
-import { reactCompanionCheer, spawnSamuelCompanion } from '../game/characterCompanion';
+import { reactCompanionCheer, reactCompanionOops, spawnSamuelCompanion } from '../game/characterCompanion';
 import { feedbackSounds } from '../game/feedbackAudio';
 import { drawComingSoonParkBackdrop } from '../game/sceneBackgrounds';
 import { drawSoccerBall } from '../game/objectGraphics';
@@ -231,6 +231,7 @@ export class BallGameScene extends Phaser.Scene {
   private onMiss(entry: FallingBall): void {
     this.balls = this.balls.filter((b) => b !== entry);
     entry.container.destroy();
+    reactCompanionOops(this, this.samuelCompanion);
     floatFeedback(
       this,
       entry.container.x,

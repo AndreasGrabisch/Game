@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import { drawSamuel } from './graphics';
-import { playSamuelWave, startSamuelIdle } from './samuelCharacter';
+import { playSamuelCheer, playSamuelWave, startSamuelIdle } from './samuelCharacter';
 import { feedbackSounds } from './feedbackAudio';
 import { duckAppMusic } from './appMusic';
 
@@ -54,6 +54,7 @@ export function runTransitionOverlay(
   samuel.setDepth(depth + 1);
   startSamuelIdle(scene, samuel, 5 * scale, 900);
   playSamuelWave(scene, samuel);
+  scene.time.delayedCall(900, () => playSamuelCheer(scene, samuel));
 
   const title = scene.add.text(cx, cy - 72 * scale, label, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',

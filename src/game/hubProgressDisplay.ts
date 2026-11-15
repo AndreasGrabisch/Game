@@ -67,7 +67,7 @@ export function drawHubProgressBoard(
   const daily = scene.add.text(-w / 2 + 18 * scale, h / 2 - (portrait ? 6 : 4) * scale, dailyLine, {
     fontFamily: 'Fredoka, Comic Sans MS, cursive',
     fontSize: `${12}px`,
-    color: summary.dailyDone ? '#2d6a45' : '#444466',
+    color: summary.dailyDone ? '#1f5c38' : '#2d2d44',
     fontStyle: 'bold',
   });
   daily.setOrigin(0, 1);

@@ -35,7 +35,7 @@ body {
   right: 0;
   z-index: 50;
   background: rgba(247, 245, 239, 0.92);
-  color: #1a1a2e;
+  color: #141428;
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -104,16 +104,16 @@ body.portrait-play #game-container {
 }
 
 .speech-bubble p {
-  font-size: clamp(20px, 4vw, 28px);
+  font-size: clamp(22px, 4.4vw, 30px);
   font-weight: 600;
-  color: #1a1a2e;
+  color: #141428;
   line-height: 1.4;
   margin-bottom: 16px;
 }
 
 .comic-btn {
   font-family: inherit;
-  font-size: clamp(18px, 3.5vw, 24px);
+  font-size: clamp(20px, 3.8vw, 26px);
   font-weight: 700;
   color: #fff;
   background: #ff6b35;
@@ -123,8 +123,8 @@ body.portrait-play #game-container {
   cursor: pointer;
   box-shadow: 4px 4px 0 #1a1a2e;
   transition: transform 0.1s, box-shadow 0.1s;
-  min-height: 52px;
-  min-width: 140px;
+  min-height: 56px;
+  min-width: 148px;
 }
 
 .comic-btn:hover {

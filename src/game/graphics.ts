@@ -1,6 +1,12 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import { feedbackSounds } from './feedbackAudio';
+import {
+  kidButtonWidth,
+  kidFontSize,
+  KID_BUTTON_FONT_PX,
+  KID_BUTTON_HEIGHT,
+} from './kidTypography';
 
 export type { BikeDrawOptions } from './bikeGraphics';
 import {
@@ -89,10 +95,11 @@ export function addComicText(
   text: string,
   size = 24,
 ): Phaser.GameObjects.Text {
+  const px = kidFontSize(size);
   return scene.add
     .text(x, y, text, {
       fontFamily: 'Fredoka, Comic Sans MS, cursive',
-      fontSize: `${size}px`,
+      fontSize: `${px}px`,
       color: '#1a1a2e',
       fontStyle: 'bold',
       align: 'center',
@@ -112,7 +119,7 @@ export function floatFeedback(
   const feedback = scene.add
     .text(x, y, message, {
       fontFamily: 'Fredoka, Comic Sans MS, cursive',
-      fontSize: `${size}px`,
+      fontSize: `${kidFontSize(size)}px`,
       color,
       fontStyle: 'bold',
       backgroundColor: '#ffffff',
@@ -140,32 +147,33 @@ export function createComicButton(
   width = 200,
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y);
-  const height = 56;
+  const btnWidth = kidButtonWidth(width);
+  const height = KID_BUTTON_HEIGHT;
   const radius = 14;
 
   const shadow = scene.add.graphics();
   shadow.fillStyle(0x000000, 0.14);
-  shadow.fillRoundedRect(-width / 2 + 2, -height / 2 + 4, width, height, radius);
+  shadow.fillRoundedRect(-btnWidth / 2 + 2, -height / 2 + 4, btnWidth, height, radius);
 
   const bgGfx = scene.add.graphics();
   const drawBg = (alpha = 1) => {
     bgGfx.clear();
     bgGfx.fillStyle(color, alpha);
     bgGfx.lineStyle(4, COLORS.outline);
-    bgGfx.fillRoundedRect(-width / 2, -height / 2, width, height, radius);
-    bgGfx.strokeRoundedRect(-width / 2, -height / 2, width, height, radius);
+    bgGfx.fillRoundedRect(-btnWidth / 2, -height / 2, btnWidth, height, radius);
+    bgGfx.strokeRoundedRect(-btnWidth / 2, -height / 2, btnWidth, height, radius);
   };
   drawBg(1);
 
-  const gloss = scene.add.rectangle(0, -height / 2 + 9, width - 16, 10, COLORS.white, 0.28);
+  const gloss = scene.add.rectangle(0, -height / 2 + 9, btnWidth - 16, 10, COLORS.white, 0.28);
 
-  const hit = scene.add.rectangle(0, 0, width, height, 0xffffff, 0.001);
+  const hit = scene.add.rectangle(0, 0, btnWidth, height, 0xffffff, 0.001);
   hit.setInteractive({ useHandCursor: true });
 
   const text = scene.add
     .text(0, 2, label, {
       fontFamily: 'Fredoka, Comic Sans MS, cursive',
-      fontSize: '22px',
+      fontSize: `${KID_BUTTON_FONT_PX}px`,
       color: '#ffffff',
       fontStyle: 'bold',
       stroke: '#1a1a2e',

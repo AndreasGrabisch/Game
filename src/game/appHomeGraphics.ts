@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
 import { drawHubBikeIcon } from './bikeGraphics';
+import { drawSoccerBall } from './objectGraphics';
 import type { AppModeIcon } from '../data/appModes';
 import type { HubWorldTier } from './hubWorldProgress';
 
@@ -93,12 +94,8 @@ export function drawModeIcon(scene: Phaser.Scene, icon: AppModeIcon, scale = 1):
       bucket.setStrokeStyle(2 * s, COLORS.outline);
       root.add(bucket);
     });
-  } else if (icon === 'soon') {
-    const ball = scene.add.circle(0, 4 * s, 20 * s, COLORS.white);
-    ball.setStrokeStyle(3 * s, COLORS.outline);
-    root.add(ball);
-    const patch = scene.add.circle(-6 * s, 0, 7 * s, 0x333333, 0.4);
-    root.add(patch);
+  } else if (icon === 'ball') {
+    root.add(drawSoccerBall(scene, 20 * s));
   } else if (icon === 'ride') {
     const path = scene.add.graphics();
     path.lineStyle(5 * s, COLORS.success, 0.8);

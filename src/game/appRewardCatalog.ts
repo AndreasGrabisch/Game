@@ -4,7 +4,13 @@ import { loadDetectiveProgress } from './detectiveProgress';
 import { getOrCreateDailyMission } from './detectiveDaily';
 import { DETECTIVE_CASES } from '../data/detectiveCases';
 import { APP_MILESTONES } from './appMilestones';
-import { getColorSortBestStars, getRideCompletionCount, loadAppTreasury, type TreasurySticker } from './appTreasury';
+import {
+  getBallGameWinCount,
+  getColorSortBestStars,
+  getRideCompletionCount,
+  loadAppTreasury,
+  type TreasurySticker,
+} from './appTreasury';
 
 const BIKE_PART_ICONS: Record<VehiclePart, string> = {
   wheels: '🛞',
@@ -70,6 +76,16 @@ export function buildTreasuryStickers(): TreasurySticker[] {
       emoji: '🎨',
       label: `Farben · bis ${colorBest}⭐`,
       source: 'colors',
+      unlocked: true,
+    });
+  }
+
+  if (getBallGameWinCount() > 0) {
+    items.push({
+      id: 'ball-champion',
+      emoji: '⚽',
+      label: `Ball · ${getBallGameWinCount()}× gefangen`,
+      source: 'ball',
       unlocked: true,
     });
   }

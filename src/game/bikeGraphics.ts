@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
+
 export interface BikeDrawOptions {
   showWheels?: boolean;
   showFrame?: boolean;
@@ -10,30 +11,242 @@ export interface BikeDrawOptions {
   frameAlpha?: number;
 }
 
+export interface BicycleSideOptions {
+  wheels?: boolean;
+  pedals?: boolean;
+  handlebar?: boolean;
+  bell?: boolean;
+  wheelAlpha?: number;
+  frameAlpha?: number;
+}
+
+/** Canonical side-view layout in local px (multiplied by scale in drawings). */
+export const BIKE_SIDE_PROFILE = {
+  rearAxleX: -55,
+  frontAxleX: 55,
+  axleY: 20,
+  wheelR: 36,
+  bbX: -2,
+  bbY: 20,
+  seatX: -20,
+  seatY: -46,
+  seatPostTop: -30,
+  headX: 38,
+  headY: -38,
+  forkTopX: 48,
+  forkTopY: -8,
+  stemBaseX: 42,
+  stemBaseY: -36,
+  barCenterX: 46,
+  barCenterY: -58,
+  barRadius: 22,
+} as const;
+
 const FRAME_HIGHLIGHT = 0xff8f5c;
 const FRAME_SHADOW = 0xd94e22;
-const TIRE_TREAD = 0x1a1a1a;
+const TIRE = 0x1a1a1a;
 
-function tube(
+function mapOptions(opts: BikeDrawOptions): BicycleSideOptions {
+  return {
+    wheels: opts.showWheels,
+    pedals: opts.showPedals,
+    handlebar: opts.showHandlebar,
+    bell: opts.showBell,
+    wheelAlpha: opts.wheelAlpha,
+    frameAlpha: opts.showFrame === false ? 0 : opts.frameAlpha,
+  };
+}
+
+function strokeTube(
   g: Phaser.GameObjects.Graphics,
   x0: number,
   y0: number,
   x1: number,
   y1: number,
   width: number,
-  fill: number,
+  color: number,
   alpha: number,
 ): void {
-  g.lineStyle(width, fill, alpha);
+  g.lineStyle(width, color, alpha);
   g.beginPath();
   g.moveTo(x0, y0);
   g.lineTo(x1, y1);
   g.strokePath();
-  g.lineStyle(Math.max(2, width * 0.22), FRAME_HIGHLIGHT, alpha * 0.45);
+  g.lineStyle(Math.max(2, width * 0.22), FRAME_HIGHLIGHT, alpha * 0.4);
   g.beginPath();
   g.moveTo(x0, y0);
   g.lineTo(x1, y1);
   g.strokePath();
+}
+
+/** Low-level painter at local origin (0,0). */
+export function paintBicycleSideProfile(
+  scene: Phaser.Scene,
+  parent: Phaser.GameObjects.Container,
+  scale: number,
+  options: BicycleSideOptions,
+): void {
+  const s = scale;
+  const {
+    wheels = false,
+    pedals = false,
+    handlebar = false,
+    bell = false,
+    wheelAlpha = 1,
+    frameAlpha = 1,
+  } = options;
+  const g = BIKE_SIDE_PROFILE;
+  const tube = 4.2 * s;
+  const R = g.wheelR * s;
+
+  const shadow = scene.add.ellipse(0, (g.axleY + 38) * s, 122 * s, 18 * s, 0x000000, 0.1 * frameAlpha);
+  parent.add(shadow);
+
+  const frameGfx = scene.add.graphics();
+
+  // Chainstay + seatstay + diamond frame
+  strokeTube(frameGfx, g.rearAxleX * s, g.axleY * s, g.bbX * s, g.bbY * s, tube, COLORS.bikeFrame, frameAlpha);
+  strokeTube(frameGfx, g.rearAxleX * s, g.axleY * s, g.seatX * s, g.seatPostTop * s, tube * 0.85, COLORS.bikeFrame, frameAlpha);
+  strokeTube(frameGfx, g.bbX * s, g.bbY * s, g.seatX * s, g.seatPostTop * s, tube, COLORS.bikeFrame, frameAlpha);
+  strokeTube(frameGfx, g.bbX * s, g.bbY * s, g.headX * s, g.headY * s, tube * 1.05, COLORS.bikeFrame, frameAlpha);
+  strokeTube(
+    frameGfx,
+    g.seatX * s,
+    g.seatPostTop * s,
+    g.headX * s,
+    g.headY * s,
+    tube * 0.95,
+    FRAME_SHADOW,
+    frameAlpha * 0.95,
+  );
+  // Seat post
+  strokeTube(frameGfx, g.seatX * s, g.seatPostTop * s, g.seatX * s, g.seatY * s, tube * 0.7, COLORS.bikeFrame, frameAlpha);
+  // Fork blades
+  strokeTube(frameGfx, g.forkTopX * s, g.forkTopY * s, g.frontAxleX * s, g.axleY * s, tube * 0.75, COLORS.bikeFrame, frameAlpha);
+  strokeTube(frameGfx, g.headX * s, g.headY * s, g.frontAxleX * s, g.axleY * s, tube * 0.55, FRAME_SHADOW, frameAlpha * 0.85);
+
+  frameGfx.fillStyle(0x5c3d2e, frameAlpha);
+  frameGfx.lineStyle(tube * 0.65, COLORS.outline, frameAlpha);
+  frameGfx.fillRoundedRect((g.seatX - 14) * s, (g.seatY - 2) * s, 28 * s, 11 * s, 5);
+  frameGfx.strokeRoundedRect((g.seatX - 14) * s, (g.seatY - 2) * s, 28 * s, 11 * s, 5);
+
+  parent.add(frameGfx);
+
+  if (wheels) {
+    parent.add(drawCartoonWheel(scene, g.rearAxleX * s, g.axleY * s, R, wheelAlpha, 'round'));
+    if (pedals) parent.add(buildCrankset(scene, g.bbX * s, g.bbY * s, s, frameAlpha));
+    parent.add(drawCartoonWheel(scene, g.frontAxleX * s, g.axleY * s, R, wheelAlpha, 'round'));
+  } else {
+    for (const ax of [g.rearAxleX, g.frontAxleX]) {
+      const ghost = scene.add.graphics();
+      ghost.lineStyle(2.5 * s, COLORS.outline, 0.45);
+      ghost.strokeCircle(ax * s, g.axleY * s, R);
+      ghost.lineStyle(1.5 * s, COLORS.bikeFrame, 0.35);
+      ghost.strokeCircle(ax * s, g.axleY * s, R * 0.72);
+      parent.add(ghost);
+    }
+  }
+
+  if (handlebar) {
+    const bars = scene.add.graphics();
+    strokeTube(bars, g.stemBaseX * s, g.stemBaseY * s, g.barCenterX * s, g.barCenterY * s, tube * 0.65, COLORS.bikeFrame, frameAlpha);
+    bars.lineStyle(tube * 0.75, COLORS.bikeFrame, frameAlpha);
+    bars.beginPath();
+    bars.arc(g.barCenterX * s, g.barCenterY * s, g.barRadius * s, Math.PI, 0, true);
+    bars.strokePath();
+    const gripL = g.barCenterX - g.barRadius;
+    const gripR = g.barCenterX + g.barRadius;
+    bars.fillStyle(0x2a2a2a, frameAlpha);
+    bars.fillCircle(gripL * s, g.barCenterY * s, 6.5 * s);
+    bars.fillCircle(gripR * s, g.barCenterY * s, 6.5 * s);
+    bars.lineStyle(2.5 * s, COLORS.outline, frameAlpha);
+    bars.strokeCircle(gripL * s, g.barCenterY * s, 6.5 * s);
+    bars.strokeCircle(gripR * s, g.barCenterY * s, 6.5 * s);
+    parent.add(bars);
+
+    if (bell) {
+      const bellRoot = scene.add.container((gripL + 6) * s, (g.barCenterY - 10) * s);
+      bellRoot.add(drawCartoonBell(scene, s * 0.55));
+      parent.add(bellRoot);
+    }
+  }
+}
+
+export function drawBicycleSideProfile(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  scale = 1,
+  options: BicycleSideOptions | BikeDrawOptions = {},
+): Phaser.GameObjects.Container {
+  const mapped =
+    'showWheels' in options || 'showFrame' in options
+      ? mapOptions(options as BikeDrawOptions)
+      : (options as BicycleSideOptions);
+  if ((options as BikeDrawOptions).showFrame === false) {
+    const empty = scene.add.container(x, y);
+    if (mapped.wheels) {
+      const g = BIKE_SIDE_PROFILE;
+      const s = scale;
+      empty.add(drawCartoonWheel(scene, g.rearAxleX * s, g.axleY * s, g.wheelR * s, mapped.wheelAlpha ?? 1, 'round'));
+      empty.add(drawCartoonWheel(scene, g.frontAxleX * s, g.axleY * s, g.wheelR * s, mapped.wheelAlpha ?? 1, 'round'));
+    }
+    return empty;
+  }
+
+  const root = scene.add.container(x, y);
+  paintBicycleSideProfile(scene, root, scale, mapped);
+  return root;
+}
+
+export function drawIllustratedBike(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  scale = 1,
+  options: BikeDrawOptions = {},
+): Phaser.GameObjects.Container {
+  return drawBicycleSideProfile(scene, x, y, scale, options);
+}
+
+function buildCrankset(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  s: number,
+  alpha: number,
+): Phaser.GameObjects.Container {
+  const root = scene.add.container(x, y);
+  const chainring = scene.add.graphics();
+  chainring.fillStyle(COLORS.wheelRim, alpha);
+  chainring.lineStyle(2.5 * s, COLORS.outline, alpha);
+  chainring.fillCircle(0, 0, 10 * s);
+  chainring.strokeCircle(0, 0, 10 * s);
+  chainring.lineStyle(1.8 * s, COLORS.outline, alpha * 0.6);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    chainring.strokeCircle(Math.cos(a) * 7 * s, Math.sin(a) * 7 * s, 2 * s);
+  }
+
+  const crank = scene.add.graphics();
+  crank.lineStyle(3 * s, COLORS.wheelRim, alpha);
+  crank.beginPath();
+  crank.moveTo(0, 0);
+  crank.lineTo(14 * s, 0);
+  crank.strokePath();
+  crank.beginPath();
+  crank.moveTo(0, 0);
+  crank.lineTo(-14 * s, 0);
+  crank.strokePath();
+  crank.fillStyle(0xff6b35, alpha);
+  crank.fillRoundedRect(10 * s, -5 * s, 18 * s, 10 * s, 4);
+  crank.fillRoundedRect(-28 * s, -5 * s, 18 * s, 10 * s, 4);
+  crank.lineStyle(2 * s, COLORS.outline, alpha);
+  crank.strokeRoundedRect(10 * s, -5 * s, 18 * s, 10 * s, 4);
+  crank.strokeRoundedRect(-28 * s, -5 * s, 18 * s, 10 * s, 4);
+
+  root.add([chainring, crank]);
+  return root;
 }
 
 export function drawCartoonWheel(
@@ -55,7 +268,7 @@ export function drawCartoonWheel(
     const half = radius * 0.72;
     sq.fillRoundedRect(-half, -half, half * 2, half * 2, 6);
     sq.strokeRoundedRect(-half, -half, half * 2, half * 2, 6);
-  sq.lineStyle(2, COLORS.wheelRim, alpha * 0.5);
+    sq.lineStyle(2, COLORS.wheelRim, alpha * 0.5);
     sq.strokeCircle(0, 0, half * 0.35);
     const face = scene.add.graphics();
     face.lineStyle(2, COLORS.outline, alpha * 0.6);
@@ -67,7 +280,7 @@ export function drawCartoonWheel(
 
   const shadow = scene.add.ellipse(2, radius * 0.12, radius * 1.85, radius * 0.45, 0x000000, 0.14 * alpha);
   const tire = scene.add.graphics();
-  tire.fillStyle(TIRE_TREAD, alpha);
+  tire.fillStyle(TIRE, alpha);
   tire.lineStyle(outline, COLORS.outline, alpha);
   tire.fillCircle(0, 0, radius);
   tire.strokeCircle(0, 0, radius);
@@ -120,185 +333,32 @@ export function drawCartoonBell(scene: Phaser.Scene, scale = 1): Phaser.GameObje
   return c;
 }
 
-function drawFrameBody(g: Phaser.GameObjects.Graphics, s: number, alpha: number, line: number): void {
-  const wx = 55 * s;
-  const wy = 20 * s;
-  g.fillStyle(COLORS.bikeFrame, alpha * 0.25);
-  g.beginPath();
-  g.moveTo(-wx, wy);
-  g.lineTo(0, -30 * s);
-  g.lineTo(wx, wy);
-  g.lineTo(0, wy);
-  g.closePath();
-  g.fillPath();
-  g.lineStyle(line, COLORS.outline, alpha);
-  g.strokeCircle(-wx, wy, 38 * s);
-  g.strokeCircle(wx, wy, 38 * s);
-
-  tube(g, -wx, wy, 0, -30 * s, line * 1.15, COLORS.bikeFrame, alpha);
-  tube(g, wx, wy, 0, -30 * s, line * 1.15, COLORS.bikeFrame, alpha);
-  tube(g, 0, -30 * s, wx, wy, line * 1.05, FRAME_SHADOW, alpha * 0.85);
-  tube(g, 0, -30 * s, 0, wy, line * 1.1, COLORS.bikeFrame, alpha);
-  tube(g, 0, -30 * s, 0, -55 * s, line * 0.95, COLORS.bikeFrame, alpha);
-
-  drawSeat(g, s, alpha, line);
-}
-
-function drawSeat(g: Phaser.GameObjects.Graphics, s: number, alpha: number, line: number): void {
-  g.fillStyle(0x5c3d2e, alpha);
-  g.lineStyle(line * 0.7, COLORS.outline, alpha);
-  g.fillRoundedRect(-14 * s, -42 * s, 28 * s, 10 * s, 5);
-  g.strokeRoundedRect(-14 * s, -42 * s, 28 * s, 10 * s, 5);
-}
-
-export function drawIllustratedBike(
-  scene: Phaser.Scene,
-  x: number,
-  y: number,
-  scale = 1,
-  options: BikeDrawOptions = {},
-): Phaser.GameObjects.Container {
-  const {
-    showWheels = false,
-    showFrame = true,
-    showPedals = false,
-    showHandlebar = false,
-    showBell = false,
-    wheelAlpha = 1,
-    frameAlpha = 1,
-  } = options;
-
-  const container = scene.add.container(x, y);
-  const s = scale;
-  const line = 3.8 * s;
-
-  const ground = scene.add.ellipse(0, 58 * s, 130 * s, 22 * s, 0x000000, 0.1 * frameAlpha);
-  container.add(ground);
-
-  if (showFrame) {
-    const frame = scene.add.graphics();
-    drawFrameBody(frame, s, frameAlpha, line);
-    container.add(frame);
-  }
-
-  if (showWheels) {
-    for (const wx of [-55, 55]) {
-      container.add(drawCartoonWheel(scene, wx * s, 20 * s, 36 * s, wheelAlpha, 'round'));
-    }
-  } else if (showFrame) {
-    for (const wx of [-55, 55]) {
-      const ghost = scene.add.graphics();
-      ghost.lineStyle(2 * s, COLORS.outline, 0.35);
-      ghost.strokeCircle(wx * s, 20 * s, 36 * s);
-      ghost.lineStyle(1.5 * s, COLORS.bikeFrame, 0.25);
-      ghost.strokeCircle(wx * s, 20 * s, 28 * s);
-      container.add(ghost);
-    }
-  }
-
-  if (showHandlebar) {
-    const bar = scene.add.graphics();
-    bar.lineStyle(line * 0.9, COLORS.bikeFrame, frameAlpha);
-    bar.beginPath();
-    bar.arc(0, -55 * s, 22 * s, Math.PI, 0, true);
-    bar.strokePath();
-    bar.lineStyle(line * 0.85, COLORS.outline, frameAlpha);
-    bar.strokeCircle(-20 * s, -55 * s, 7 * s);
-    bar.strokeCircle(20 * s, -55 * s, 7 * s);
-    bar.fillStyle(0x333333, frameAlpha);
-    bar.fillCircle(-20 * s, -55 * s, 6 * s);
-    bar.fillCircle(20 * s, -55 * s, 6 * s);
-    tube(bar, 0, -55 * s, 0, -30 * s, line * 0.75, COLORS.bikeFrame, frameAlpha);
-    container.add(bar);
-  }
-
-  if (showPedals) {
-    const drivetrain = scene.add.graphics();
-    drivetrain.fillStyle(COLORS.wheel, frameAlpha);
-    drivetrain.lineStyle(line * 0.65, COLORS.outline, frameAlpha);
-    drivetrain.fillCircle(0, 20 * s, 11 * s);
-    drivetrain.strokeCircle(0, 20 * s, 11 * s);
-    drivetrain.lineStyle(2.5 * s, COLORS.wheelRim, frameAlpha);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      drivetrain.strokeCircle(Math.cos(a) * 18 * s, 20 * s + Math.sin(a) * 18 * s, 2.5 * s);
-    }
-    container.add(drivetrain);
-    const crankL = scene.add.container(-16 * s, 20 * s);
-    const crankR = scene.add.container(16 * s, 20 * s);
-    for (const crank of [crankL, crankR]) {
-      const arm = scene.add.rectangle(0, 0, 14 * s, 5 * s, COLORS.wheelRim);
-      arm.setStrokeStyle(2 * s, COLORS.outline);
-      const pedal = scene.add.graphics();
-      pedal.fillStyle(0xff6b35, frameAlpha);
-      pedal.lineStyle(2 * s, COLORS.outline, frameAlpha);
-      pedal.fillRoundedRect(-10 * s, -5 * s, 20 * s, 10 * s, 4);
-      pedal.strokeRoundedRect(-10 * s, -5 * s, 20 * s, 10 * s, 4);
-      crank.add([arm, pedal]);
-    }
-    crankL.setAngle(-35);
-    crankR.setAngle(35);
-    container.add([crankL, crankR]);
-  }
-
-  if (showBell) {
-    const bellMount = scene.add.container(-16 * s, -58 * s);
-    bellMount.add(drawCartoonBell(scene, s));
-    container.add(bellMount);
-  }
-
-  return container;
-}
-
-/** Compact bike for handlebar mission (top-down catch lane). */
+/** Lane mission: recognizable side bike, whole unit tilts when steering. */
 export function drawBikeLaneAvatar(scene: Phaser.Scene, scale: number): {
   root: Phaser.GameObjects.Container;
   frontWheel: Phaser.GameObjects.Container;
 } {
-  const root = scene.add.container(0, 0);
-  const s = scale;
-  const shadow = scene.add.ellipse(0, 20 * s, 56 * s, 16 * s, 0x000000, 0.15);
-  const rear = drawCartoonWheel(scene, 0, 18 * s, 16 * s, 1, 'round');
-  rear.setScale(0.95, 0.55);
+  const root = drawBicycleSideProfile(scene, 0, 0, scale * 0.42, {
+    wheels: true,
+    pedals: true,
+    handlebar: true,
+    bell: false,
+  });
+  const samuelLayer = scene.add.container(-8 * scale, -38 * scale);
+  const head = scene.add.circle(0, 0, 11 * scale, COLORS.samuelSkin);
+  head.setStrokeStyle(2 * scale, COLORS.outline);
+  const hair = scene.add.ellipse(0, -8 * scale, 18 * scale, 9 * scale, 0x5c3d2e);
+  hair.setStrokeStyle(2 * scale, COLORS.outline);
+  const eyeL = scene.add.circle(-4 * scale, -1 * scale, 1.6 * scale, COLORS.outline);
+  const eyeR = scene.add.circle(4 * scale, -1 * scale, 1.6 * scale, COLORS.outline);
+  samuelLayer.add([hair, head, eyeL, eyeR]);
+  root.add(samuelLayer);
 
-  const frame = scene.add.graphics();
-  tube(frame, 0, 14 * s, 0, -8 * s, 5 * s, COLORS.bikeFrame, 1);
-  tube(frame, 0, -8 * s, 0, -22 * s, 4 * s, COLORS.bikeFrame, 1);
-
-  const frontWheel = scene.add.container(0, -26 * s);
-  const tire = scene.add.ellipse(0, 0, 18 * s, 30 * s, TIRE_TREAD);
-  tire.setStrokeStyle(2.5 * s, COLORS.outline);
-  const rim = scene.add.ellipse(0, 0, 11 * s, 18 * s, COLORS.wheelRim);
-  rim.setStrokeStyle(2 * s, COLORS.outline);
-  const bar = scene.add.graphics();
-  bar.lineStyle(3 * s, COLORS.bikeFrame);
-  bar.beginPath();
-  bar.arc(0, -12 * s, 14 * s, Math.PI, 0, true);
-  bar.strokePath();
-  frontWheel.add([tire, rim, bar]);
-
-  const head = scene.add.circle(0, -6 * s, 11 * s, COLORS.samuelSkin);
-  head.setStrokeStyle(2 * s, COLORS.outline);
-  const hair = scene.add.ellipse(0, -14 * s, 18 * s, 9 * s, 0x5c3d2e);
-  hair.setStrokeStyle(2 * s, COLORS.outline);
-  const eyeL = scene.add.circle(-4 * s, -7 * s, 1.6 * s, COLORS.outline);
-  const eyeR = scene.add.circle(4 * s, -7 * s, 1.6 * s, COLORS.outline);
-
-  root.add([shadow, rear, frame, frontWheel, hair, head, eyeL, eyeR]);
-  return { root, frontWheel };
+  return { root, frontWheel: root };
 }
 
 export function drawPedalPartIcon(scene: Phaser.Scene, scale: number): Phaser.GameObjects.Container {
-  const c = scene.add.container(0, 0);
-  const s = scale;
-  const crank = scene.add.graphics();
-  tube(crank, -8 * s, 0, 12 * s, 0, 4 * s, COLORS.wheelRim, 1);
-  crank.fillStyle(0xff6b35, 1);
-  crank.lineStyle(2 * s, COLORS.outline);
-  crank.fillRoundedRect(10 * s, -6 * s, 22 * s, 12 * s, 4);
-  crank.strokeRoundedRect(10 * s, -6 * s, 22 * s, 12 * s, 4);
-  c.add(crank);
-  return c;
+  return buildCrankset(scene, 0, 0, scale, 1);
 }
 
 export function drawChainPartIcon(scene: Phaser.Scene, scale: number): Phaser.GameObjects.Container {
@@ -324,19 +384,29 @@ export function drawWheelPartIcon(scene: Phaser.Scene, scale: number): Phaser.Ga
 
 export function drawHandlebarPartIcon(scene: Phaser.Scene, scale: number): Phaser.GameObjects.Container {
   const c = scene.add.container(0, 0);
+  const g = scene.add.graphics();
   const s = scale;
-  const bar = scene.add.graphics();
-  bar.lineStyle(4 * s, COLORS.bikeFrame);
-  bar.beginPath();
-  bar.arc(0, 4 * s, 28 * s, Math.PI, 0, true);
-  bar.strokePath();
-  bar.fillStyle(0x333333, 1);
-  bar.fillCircle(-26 * s, 4 * s, 7 * s);
-  bar.fillCircle(26 * s, 4 * s, 7 * s);
-  bar.lineStyle(3 * s, COLORS.outline);
-  bar.strokeCircle(-26 * s, 4 * s, 7 * s);
-  bar.strokeCircle(26 * s, 4 * s, 7 * s);
-  tube(bar, 0, 4 * s, 0, 22 * s, 3 * s, COLORS.bikeFrame, 1);
-  c.add(bar);
+  const tube = 4 * s;
+  strokeTube(g, 0, 18 * s, 0, -4 * s, tube * 0.65, COLORS.bikeFrame, 1);
+  g.lineStyle(tube * 0.75, COLORS.bikeFrame);
+  g.beginPath();
+  g.arc(0, -6 * s, 26 * s, Math.PI, 0, true);
+  g.strokePath();
+  g.fillStyle(0x2a2a2a, 1);
+  g.fillCircle(-26 * s, -6 * s, 7 * s);
+  g.fillCircle(26 * s, -6 * s, 7 * s);
+  g.lineStyle(2.5 * s, COLORS.outline);
+  g.strokeCircle(-26 * s, -6 * s, 7 * s);
+  g.strokeCircle(26 * s, -6 * s, 7 * s);
+  c.add(g);
   return c;
+}
+
+export function drawHubBikeIcon(scene: Phaser.Scene, scale: number): Phaser.GameObjects.Container {
+  return drawBicycleSideProfile(scene, 0, 0, scale * 0.38, {
+    wheels: true,
+    pedals: false,
+    handlebar: true,
+    bell: false,
+  });
 }

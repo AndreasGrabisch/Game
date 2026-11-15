@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from '../../game/constants';
-import { addComicText, createComicButton, drawStar, floatFeedback } from '../../game/graphics';
+import { addComicText, createComicButton, drawBike, drawStar, floatFeedback } from '../../game/graphics';
 import { drawBikeLaneAvatar, drawHandlebarPartIcon } from '../../game/bikeGraphics';
 import { feedbackSounds } from '../../game/feedbackAudio';
 import { starsForMistakes } from '../../game/scoring';
@@ -82,6 +82,12 @@ export class Mission03Handlebar extends Phaser.Scene {
     const roadBottom = this.catchY + 36 * scale;
     this.createRoad(x, roadTop, roadBottom, scale);
     this.createRider(scale);
+    drawBike(this, x, y + 118 * scale, 1.15 * scale, {
+      showFrame: true,
+      showWheels: true,
+      showPedals: true,
+      showHandlebar: false,
+    }).setDepth(3);
     this.createControls(x, y + 132 * scale, y + 214 * scale, scale);
 
     createComicButton(

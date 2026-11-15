@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { COLORS } from './constants';
+import { drawHubBikeIcon } from './bikeGraphics';
 import type { AppModeIcon } from '../data/appModes';
 import type { HubWorldTier } from './hubWorldProgress';
 
@@ -77,14 +78,7 @@ export function drawModeIcon(scene: Phaser.Scene, icon: AppModeIcon, scale = 1):
   const s = scale;
 
   if (icon === 'bike') {
-    const wheelL = scene.add.circle(-22 * s, 10 * s, 16 * s, COLORS.wheel);
-    wheelL.setStrokeStyle(3 * s, COLORS.outline);
-    const wheelR = scene.add.circle(22 * s, 10 * s, 16 * s, COLORS.wheel);
-    wheelR.setStrokeStyle(3 * s, COLORS.outline);
-    const frame = scene.add.graphics();
-    frame.lineStyle(4 * s, COLORS.bikeFrame, 1);
-    frame.strokeTriangle(-22 * s, 10 * s, 0, -18 * s, 22 * s, 10 * s);
-    root.add([wheelL, wheelR, frame]);
+    root.add(drawHubBikeIcon(scene, s));
   } else if (icon === 'detective') {
     const glass = scene.add.circle(0, 0, 22 * s, 0xdcecff, 0.9);
     glass.setStrokeStyle(4 * s, 0x5b6ee1);
